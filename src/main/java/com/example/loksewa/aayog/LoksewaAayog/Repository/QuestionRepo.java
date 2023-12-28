@@ -9,5 +9,5 @@ import com.example.loksewa.aayog.LoksewaAayog.Entity.Question;
 public interface QuestionRepo extends JpaRepository<Question, Long>{
 	List<Question> findByIdIn(List<Long> ids);
 	
-	Long countByIdAndAnswer(int id, int Answer);
+	Long countByIdAndAnswer(Long long1, int Answer);
 }

@@ -1,6 +1,7 @@
 package com.example.loksewa.aayog.LoksewaAayog.Controller;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,9 @@ import com.example.loksewa.aayog.LoksewaAayog.Entity.Position;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Question;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.PositionRepo;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.QuestionRepo;
+import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.Answer;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.QuestionResponse;
+import com.example.loksewa.aayog.LoksewaAayog.payload.response.Score;
 
 import jakarta.validation.Valid;
 
@@ -40,6 +43,7 @@ public class QuestionController {
 		q.setOptionC(question.getOptionC());
 		q.setOptionD(question.getOptionD());
 		q.setAnswer(question.getAnswer());
+		
 		Set<String> strPositions = question.getPosition();
 		Set<Position> positions = new HashSet<>();
 		
@@ -83,4 +87,15 @@ public class QuestionController {
 		questionRepo.save(q);
 		return ResponseEntity.status(HttpStatus.CREATED).body(question);
 	}
+	
+	@PostMapping("/answer")
+	@PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
+	public ResponseEntity<Score> evaluate(@RequestBody List<Answer> answers) {
+	int rights = 0;
+	for (Answer answer : answers)
+	rights +=  questionRepo.countByIdAndAnswer(answer.getId(), answer.getOption());
+	Score score = new Score(answers.size(), rights);
+	return ResponseEntity.status(HttpStatus.CREATED).body(score);
+	}
+	 
 }
