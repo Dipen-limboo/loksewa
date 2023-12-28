@@ -2,15 +2,13 @@ package com.example.loksewa.aayog.LoksewaAayog.payload.response;
 
 import java.util.List;
 
-public class UserInfoResponse {
+public class JwtResponse {
+	private String token;
 	private Long id;
 	private String username;
 	private String email;
 	private List<String> roles;
-	private String token;
-	
 
-	
 
 	public String getToken() {
 		return token;
@@ -20,13 +18,13 @@ public class UserInfoResponse {
 		this.token = token;
 	}
 
-	public UserInfoResponse(Long id, String username, String email, List<String> roles, String token) {
+	public JwtResponse(String token, Long id, String username, String email, List<String> roles) {
 		super();
+		this.token = token;
 		this.id = id;
 		this.username = username;
 		this.email = email;
 		this.roles = roles;
-		this.token = token;
 	}
 
 	public Long getId() {

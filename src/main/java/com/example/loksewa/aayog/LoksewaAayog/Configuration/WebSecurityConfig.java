@@ -27,8 +27,7 @@ import com.example.loksewa.aayog.LoksewaAayog.security.service.UserDetailsServic
 //prePostEnabled = true) // by default
 public class WebSecurityConfig {
   
-  @Value("${spring.h2.console.path}")
-  private String h2ConsolePath;
+
   
   @Autowired
   UserDetailsServiceImpl userDetailsService;
@@ -67,14 +66,13 @@ public class WebSecurityConfig {
         .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> 
-        		auth.
-        		requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+        		auth
+        		.requestMatchers("/api/auth/**").permitAll()
+        		.requestMatchers("/api/test/**").permitAll()
         		.requestMatchers("/h2-ui/**").permitAll()
         		.anyRequest().authenticated()
         		);
     
- // fix H2 database console: Refused to display ' in a frame because it set 'X-Frame-Options' to 'deny'
-    http.headers(headers -> headers.frameOptions(frameOption -> frameOption.sameOrigin()));
     
     http.authenticationProvider(authenticationProvider());
 
