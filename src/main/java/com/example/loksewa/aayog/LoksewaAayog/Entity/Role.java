@@ -1,6 +1,5 @@
 package com.example.loksewa.aayog.LoksewaAayog.Entity;
 
-import java.util.List;
 
 
 import jakarta.persistence.*;

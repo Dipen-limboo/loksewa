@@ -1,6 +1,5 @@
 package com.example.loksewa.aayog.LoksewaAayog.Entity;
 
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,25 +8,26 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name="positions")
-public class Position {
-	
+@Table(name="scores")
+public class UserScore {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
-	@Column
-	private String name;  
+	@Column(name="total_attempt")
+	private int total;
 	
-	
+	@Column(name="correct")
+	private int right;
 
-	public Position() {
+	public UserScore() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
-	public Position( String name) {
-		this.name = name;
+	public UserScore(int total, int right) {
+		super();
+		this.total = total;
+		this.right = right;
 	}
 
 	public Long getId() {
@@ -38,11 +38,21 @@ public class Position {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+	public int getTotal() {
+		return total;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setTotal(int total) {
+		this.total = total;
 	}
+
+	public int getRight() {
+		return right;
+	}
+
+	public void setRight(int right) {
+		this.right = right;
+	}
+	
+	
 }

@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Position;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Question;
+import com.example.loksewa.aayog.LoksewaAayog.Entity.UserScore;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.PositionRepo;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.QuestionRepo;
+import com.example.loksewa.aayog.LoksewaAayog.Repository.ScoreRepo;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.Answer;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.QuestionResponse;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.Score;
@@ -33,6 +35,9 @@ public class QuestionController {
 	@Autowired
 	private PositionRepo positionRepo;
 	
+	@Autowired
+	private ScoreRepo scoreRepo;
+	
 	@PostMapping("/addingQuestion")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<?> addQuestion(@Valid @RequestBody QuestionResponse question){
@@ -43,7 +48,7 @@ public class QuestionController {
 		q.setOptionC(question.getOptionC());
 		q.setOptionD(question.getOptionD());
 		q.setAnswer(question.getAnswer());
-		
+		q.setYear(question.getYear());
 		Set<String> strPositions = question.getPosition();
 		Set<Position> positions = new HashSet<>();
 		
@@ -90,12 +95,15 @@ public class QuestionController {
 	
 	@PostMapping("/answer")
 	@PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
-	public ResponseEntity<Score> evaluate(@RequestBody List<Answer> answers) {
-	int rights = 0;
-	for (Answer answer : answers)
-	rights +=  questionRepo.countByIdAndAnswer(answer.getId(), answer.getOption());
-	Score score = new Score(answers.size(), rights);
-	return ResponseEntity.status(HttpStatus.CREATED).body(score);
+	public ResponseEntity<?> evaluate(@RequestBody List<Answer> answers) {
+		UserScore userScore = new UserScore(); 
+		int rights = 0;
+		for (Answer answer : answers) 
+			rights +=  questionRepo.countByIdAndAnswer(answer.getId(), answer.getOption());
+		userScore.setRight(rights);
+		userScore.setTotal(answers.size());
+		scoreRepo.save(userScore);
+		return ResponseEntity.status(HttpStatus.CREATED).body(userScore);
 	}
 	 
 }

@@ -6,8 +6,10 @@ import jakarta.validation.constraints.*;
 
 public class QuestionResponse {
 
-	
+	@NotEmpty
 	private Set<String> position;
+
+	private int year; 
 	
 	@NotBlank
 	private String questionText;
@@ -26,7 +28,7 @@ public class QuestionResponse {
 	
 	@NotNull
 	private int answer;
-
+	
 	public Set<String> getPosition() {
 		return position;
 	}
@@ -81,6 +83,14 @@ public class QuestionResponse {
 
 	public void setAnswer(int answer) {
 		this.answer = answer;
+	}
+
+	public int getYear() {
+		return year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
 	}
 	
 	

@@ -13,8 +13,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 @Entity
 @Table(name="questions")
@@ -59,23 +62,30 @@ public class Question {
 		super();
 		// TODO Auto-generated constructor stub
 	}
-
 	
-	public Question(@NotEmpty(message = "Question should be inserted") String questionText,
-			@NotEmpty(message = "Option should be inserted") String optionA,
+	@Column(name="qustion_year")
+	@Min(value = 2069, message = "Year must start with 20")
+	@Max(value = 2081, message = "Year must not exceed 2099")
+	private int year;
+	
+	
+	public Question(Long id, @NotEmpty(message = "Question should be inserted") String questionText,
+			Set<Position> position, @NotEmpty(message = "Option should be inserted") String optionA,
 			@NotEmpty(message = "Option should be inserted") String optionB,
 			@NotEmpty(message = "Option should be inserted") String optionC,
 			@NotEmpty(message = "Option should be inserted") String optionD,
-			@NotEmpty(message = "Anser must be enter") int answer) {
+			@NotNull(message = "Anser must be enter") int answer, @Pattern(regexp = "^(20)\\d{2}$") int year) {
 		super();
+		this.id = id;
 		this.questionText = questionText;
+		this.position = position;
 		this.optionA = optionA;
 		this.optionB = optionB;
 		this.optionC = optionC;
 		this.optionD = optionD;
 		this.answer = answer;
+		this.year = year;
 	}
-
 
 	public Long getId() {
 		return id;
@@ -140,6 +150,15 @@ public class Question {
 	public void setAnswer(int answer) {
 		this.answer = answer;
 	}
+
+	public int getYear() {
+		return year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+	
     
     
 }
