@@ -3,6 +3,7 @@ package com.example.loksewa.aayog.LoksewaAayog.Entity;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -47,7 +48,7 @@ public class User {
      inverseJoinColumns = @JoinColumn(name = "role_id"))
   private Set<Role> roles = new HashSet<>();
 
-  @ManyToMany(fetch = FetchType.LAZY)
+  @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   @JoinTable(name="user_score_board",
   			joinColumns=@JoinColumn(name="user_id"),
   			inverseJoinColumns=@JoinColumn(name="score_id")

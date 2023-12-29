@@ -1,10 +1,14 @@
 package com.example.loksewa.aayog.LoksewaAayog.Entity;
 
+import java.util.List;
+
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -20,6 +24,10 @@ public class UserScore {
 	@Column(name="correct")
 	private int right;
 
+	@ManyToMany(mappedBy="scores")
+    private List<User> users;
+	
+	
 	public UserScore() {
 		super();
 	}
@@ -52,6 +60,14 @@ public class UserScore {
 
 	public void setRight(int right) {
 		this.right = right;
+	}
+
+	public List<User> getUsers() {
+		return users;
+	}
+
+	public void setUsers(List<User> users) {
+		this.users = users;
 	}
 	
 	

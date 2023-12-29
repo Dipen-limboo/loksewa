@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,13 +17,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Position;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Question;
+import com.example.loksewa.aayog.LoksewaAayog.Entity.User;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.UserScore;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.PositionRepo;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.QuestionRepo;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.ScoreRepo;
+import com.example.loksewa.aayog.LoksewaAayog.Repository.UserRepository;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.Answer;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.QuestionResponse;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.Score;
+import com.example.loksewa.aayog.LoksewaAayog.security.service.UserDetailsImpl;
 
 import jakarta.validation.Valid;
 
@@ -34,6 +39,9 @@ public class QuestionController {
 	
 	@Autowired
 	private PositionRepo positionRepo;
+	
+	@Autowired
+	private UserRepository userRepo;
 	
 	@Autowired
 	private ScoreRepo scoreRepo;
@@ -100,10 +108,21 @@ public class QuestionController {
 		int rights = 0;
 		for (Answer answer : answers) 
 			rights +=  questionRepo.countByIdAndAnswer(answer.getId(), answer.getOption());
+		Score score = new Score(answers.size(), rights);
+		
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		
+		UserDetailsImpl userDetails =(UserDetailsImpl) auth.getPrincipal();
+		
+		String username = userDetails.getUsername();
+		User currentUser = userRepo.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found by " + username));
+		
 		userScore.setRight(rights);
 		userScore.setTotal(answers.size());
+		
+		currentUser.getScores().add(userScore);
 		scoreRepo.save(userScore);
-		return ResponseEntity.status(HttpStatus.CREATED).body(userScore);
+		return ResponseEntity.status(HttpStatus.CREATED).body(score);
 	}
 	 
 }
