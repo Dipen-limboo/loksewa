@@ -18,17 +18,19 @@ public class Position {
 	
 	@Column
 	private String name;  
-	
-	
 
 	public Position() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public Position( String name) {
+	public Position(Long id, String name) {
+		super();
+		this.id = id;
 		this.name = name;
 	}
+
+
 
 	public Long getId() {
 		return id;

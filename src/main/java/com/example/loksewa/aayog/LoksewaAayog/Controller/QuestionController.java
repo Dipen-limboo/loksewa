@@ -54,7 +54,7 @@ public class QuestionController {
 		question.setOptionT(opt);
 		
 		List<OptionsDto> optionDto = questionDto.getOptions();
-		List<Option> toSaveOptions = new ArrayList();
+		List<Option> toSaveOptions = new ArrayList<>();
 		for(OptionsDto dtoOption : optionDto )	{
 			Option option = new Option();
 			option.setText(dtoOption.getOptionName());
@@ -143,6 +143,7 @@ public class QuestionController {
 			Option option = new Option();
 			option.setText(optiondto.getOption());
 			option.setCorrect(optiondto.isCheck());
+			option.setQuestion(question);
 			listOption.add(option);
 		}
 		

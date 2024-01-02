@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Position;
 
 public interface PositionRepo extends JpaRepository<Position, Long>{
-	Optional <Position> findByName(String name);
+	Optional<Position> findById(int positionId);
 }

@@ -17,7 +17,7 @@ public class Option {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private long id;
+	private Long id;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JsonBackReference
@@ -34,7 +34,7 @@ public class Option {
 		// TODO Auto-generated constructor stub
 	}
 
-	public Option(long id, Question question, String text, boolean isTrue) {
+	public Option(Long id, Question question, String text, boolean isTrue) {
 		super();
 		this.id = id;
 		this.question = question;
@@ -42,11 +42,11 @@ public class Option {
 		this.isCorrect = isTrue;
 	}
 
-	public long getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(long id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 
