@@ -1,26 +1,25 @@
 package com.example.loksewa.aayog.LoksewaAayog.Entity;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 
 @Entity
-@Table(name="questions")
+@Table(name="questions", 
+			uniqueConstraints = @UniqueConstraint(columnNames="question_text"))
 public class Question {
 	
 	@Id
@@ -31,60 +30,26 @@ public class Question {
     @NotEmpty(message="Question should be inserted")
     private String questionText;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name="question_positions",
-    		joinColumns = @JoinColumn(name="question_id"),
-    		inverseJoinColumns = @JoinColumn(name="positions_id")
-    		)
-    private Set<Position> position = new HashSet<>();
+    @ManyToOne
+    @JoinColumn(name="option_type_id")
+    private OptionType optionT;
     
-    @Column(name="opt_a") 
-    @NotEmpty(message="Option should be inserted")
-    private String optionA;
-    
-    @Column(name="opt_b") 
-    @NotEmpty(message="Option should be inserted")
-    private String optionB;
-    
-    @Column(name="opt_c") 
-    @NotEmpty(message="Option should be inserted")
-    private String optionC;
-    
-    @Column(name="opt_d") 
-    @NotEmpty(message="Option should be inserted")
-    private String optionD;
-    
-    @Column(name="answer") 
-    @NotNull(message="Anser must be enter")
-    private int answer;
+    @OneToMany(mappedBy="question", cascade=CascadeType.ALL)
+    @JsonManagedReference
+    private List<Option> options;
 
 	public Question() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
-	
-	@Column(name="qustion_year")
-	@Min(value = 2069, message = "Year must start with 20")
-	@Max(value = 2081, message = "Year must not exceed 2099")
-	private int year;
-	
-	
-	public Question(Long id, @NotEmpty(message = "Question should be inserted") String questionText,
-			Set<Position> position, @NotEmpty(message = "Option should be inserted") String optionA,
-			@NotEmpty(message = "Option should be inserted") String optionB,
-			@NotEmpty(message = "Option should be inserted") String optionC,
-			@NotEmpty(message = "Option should be inserted") String optionD,
-			@NotNull(message = "Anser must be enter") int answer, @Pattern(regexp = "^(20)\\d{2}$") int year) {
+
+	public Question(Long id, @NotEmpty(message = "Question should be inserted") String questionText, OptionType optionT,
+			List<Option> options) {
 		super();
 		this.id = id;
 		this.questionText = questionText;
-		this.position = position;
-		this.optionA = optionA;
-		this.optionB = optionB;
-		this.optionC = optionC;
-		this.optionD = optionD;
-		this.answer = answer;
-		this.year = year;
+		this.optionT = optionT;
+		this.options = options;
 	}
 
 	public Long getId() {
@@ -103,62 +68,21 @@ public class Question {
 		this.questionText = questionText;
 	}
 
-	public Set<Position> getPosition() {
-		return position;
+	public OptionType getOptionT() {
+		return optionT;
 	}
 
-	public void setPosition(Set<Position> position) {
-		this.position = position;
+	public void setOptionT(OptionType optionT) {
+		this.optionT = optionT;
 	}
 
-	public String getOptionA() {
-		return optionA;
+	public List<Option> getOptions() {
+		return options;
 	}
 
-	public void setOptionA(String optionA) {
-		this.optionA = optionA;
+	public void setOptions(List<Option> options) {
+		this.options = options;
 	}
-
-	public String getOptionB() {
-		return optionB;
-	}
-
-	public void setOptionB(String optionB) {
-		this.optionB = optionB;
-	}
-
-	public String getOptionC() {
-		return optionC;
-	}
-
-	public void setOptionC(String optionC) {
-		this.optionC = optionC;
-	}
-
-	public String getOptionD() {
-		return optionD;
-	}
-
-	public void setOptionD(String optionD) {
-		this.optionD = optionD;
-	}
-
-	public int getAnswer() {
-		return answer;
-	}
-
-	public void setAnswer(int answer) {
-		this.answer = answer;
-	}
-
-	public int getYear() {
-		return year;
-	}
-
-	public void setYear(int year) {
-		this.year = year;
-	}
-	
     
     
 }
