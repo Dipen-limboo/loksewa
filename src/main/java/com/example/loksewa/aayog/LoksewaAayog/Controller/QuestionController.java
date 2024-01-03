@@ -149,6 +149,7 @@ public class QuestionController {
 	if(OptionalQuestion.isPresent()) {
 		Question question = OptionalQuestion.get(); 
 		List<Option> optionList = optionRepo.findByQuestion(question);
+		
 		question.setQuestionText(editQuestionDto.getQuestion());
 		
 		int optionType = editQuestionDto.getOptionType();
