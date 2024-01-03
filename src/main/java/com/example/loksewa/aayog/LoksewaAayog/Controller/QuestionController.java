@@ -1,11 +1,14 @@
 package com.example.loksewa.aayog.LoksewaAayog.Controller;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,11 +19,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Option;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.OptionType;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Question;
+import com.example.loksewa.aayog.LoksewaAayog.Repository.OptionRepo;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.OptionTypeRepo;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.QuestionRepo;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.EditOptionDto;
@@ -31,6 +36,7 @@ import com.example.loksewa.aayog.LoksewaAayog.payload.response.MessageResponse;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.OptionDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.ViewResponseDto;
 
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 @RestController
@@ -42,6 +48,9 @@ public class QuestionController {
 
 	@Autowired
 	private OptionTypeRepo optRepo; 
+	
+	@Autowired
+	private OptionRepo optionRepo;
 
 	@PostMapping("/addingQuestion")
 	@PreAuthorize("hasRole('ADMIN')")
@@ -70,12 +79,19 @@ public class QuestionController {
 	
 	@GetMapping("/listOfQuestions")
 	@PreAuthorize("hasRole('ADMIN')")
-	public ResponseEntity<?> viewListOfQuestions(){
-//		return ResponseEntity.ok(questionRepo.findAll());
-		List<ViewResponseDto> listDto = new ArrayList<>();
-		List<Question> questionList = questionRepo.findAll();
+	public ResponseEntity<?> viewListOfQuestions(
+		    @RequestParam(defaultValue = "1") int page,
+		    @RequestParam(defaultValue = "10") int size,
+		    @RequestParam(name = "sort", required = false, defaultValue = "id") String id,
+		    @RequestParam(name = "order", required = false, defaultValue = "desc") String sortDir
+			) {
+	    Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(id).ascending() : Sort.by(id).descending();
+	    Pageable pageable = PageRequest.of(page -1, size, sort);
+	
+		Page<Question> questionPage = questionRepo.findAll(pageable);
 		
-		for (Question question: questionList) {
+		List<ViewResponseDto> listDto = new ArrayList<>();
+		for (Question question: questionPage.getContent()) {
 			ViewResponseDto responseDto = new ViewResponseDto();
 			responseDto.setId(question.getId());
 			responseDto.setQuestion(question.getQuestionText());
@@ -126,28 +142,32 @@ public class QuestionController {
 	
 	@PutMapping("/editQuestions/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
+	@Transactional
 	public ResponseEntity<?> updateQuestion(@PathVariable Long id, @RequestBody EditQuestionDto editQuestionDto){
 	Optional<Question> OptionalQuestion = questionRepo.findById(id);
 	
 	if(OptionalQuestion.isPresent()) {
 		Question question = OptionalQuestion.get(); 
+		List<Option> optionList = optionRepo.findByQuestion(question);
 		question.setQuestionText(editQuestionDto.getQuestion());
 		
 		int optionType = editQuestionDto.getOptionType();
 		OptionType opt = optRepo.findById(optionType);
 		question.setOptionT(opt);
-
-		List<Option> listOption = new ArrayList<>();
-		List<EditOptionDto> listOptiondto = editQuestionDto.getOption();
-		for(EditOptionDto optiondto: listOptiondto) {
-			Option option = new Option();
-			option.setText(optiondto.getOption());
-			option.setCorrect(optiondto.isCheck());
-			option.setQuestion(question);
-			listOption.add(option);
-		}
 		
-		question.setOptions(listOption);
+		List<EditOptionDto> editOptionDtoList = editQuestionDto.getOption();
+		
+		
+		for (int i= 0; i < Math.min(optionList.size(), editOptionDtoList.size()); i++ ) {
+			Option existingOption = optionList.get(i);
+			EditOptionDto editOptionDto = editOptionDtoList.get(i);
+			
+			existingOption.setText(editOptionDto.getOption());
+			existingOption.setCorrect(editOptionDto.isCheck());
+			optionRepo.save(existingOption);
+			
+			
+		}
 		questionRepo.save(question);
 		return ResponseEntity.ok().body(editQuestionDto);
 	} 
