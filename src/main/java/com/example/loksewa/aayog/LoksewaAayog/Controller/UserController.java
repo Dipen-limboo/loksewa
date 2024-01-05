@@ -1,10 +1,12 @@
 package com.example.loksewa.aayog.LoksewaAayog.Controller;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -40,6 +44,7 @@ import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.ChangeRoleDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.LoginRequest;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.SignupRequest;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.UserDto;
+import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.VerifiedTokenDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.JwtResponse;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.MessageResponse;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.RoleResponseDto;
@@ -67,6 +72,9 @@ public class UserController {
 
 	@Autowired
 	JwtUtils jwtUtils;
+	
+	@Autowired
+	JavaMailSender mailSender;
 		
 	@PostMapping("/signin")
 	public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -75,8 +83,13 @@ public class UserController {
        .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
-		String jwt = jwtUtils.generateJwtToken(authentication);
+		
 		UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+		if(!userDetails.isVerified()) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageResponse("ERROR: Verified your email to singup first"));
+		}
+		
+		String jwt = jwtUtils.generateJwtToken(authentication);
 		List<String> roles = userDetails.getAuthorities().stream()
 				.map(item -> item.getAuthority())
 				.collect(Collectors.toList());
@@ -98,10 +111,23 @@ public class UserController {
 			return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
 		}
 
-	    // Create new user's account
-		User user = new User(signUpRequest.getUsername(),
-                        signUpRequest.getEmail(),
-                        encoder.encode(signUpRequest.getPassword()));
+		User user = new User();
+		user.setFirstName(signUpRequest.getFirstName());
+		user.setMiddleName(signUpRequest.getMiddleName());
+		user.setLastName(signUpRequest.getLastName());
+		user.setUsername(signUpRequest.getUsername());
+		user.setBirthDate(signUpRequest.getDateOfBirth());
+		user.setPhone(signUpRequest.getPhone());
+		user.setEmail(signUpRequest.getEmail());
+		user.setPassword(encoder.encode(signUpRequest.getPassword()));
+		user.setVerifiedDate(new Date());
+		//verifying the singup by generating token 
+		String token = UUID.randomUUID().toString();
+		
+		String email = signUpRequest.getEmail();
+		sendTokenToEmail(token, email);
+		user.setVerifiedToken(token);
+		
 		Set<String> strRoles = signUpRequest.getRole();
 		Set<Role> roles = new HashSet<>();
 
@@ -131,7 +157,34 @@ public class UserController {
 		}
 		user.setRoles(roles);
 		userRepository.save(user);
-		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+		return ResponseEntity.ok(new MessageResponse("Check you mail and verified to register!"));
+	}
+	
+	private void sendTokenToEmail(String token, String email) {
+		SimpleMailMessage mailMessage = new SimpleMailMessage();
+		mailMessage.setFrom("dipenlimboo564@gmail.com");
+		mailMessage.setTo(email);
+		String subject = "User Verification Request";
+		String text = "To verified your register request, click the following link: "
+                + "http://localhost:8081/api/user/verifiedToken?token=" + token;
+		mailMessage.setSubject(subject);
+		mailMessage.setText(text);
+		mailSender.send(mailMessage);
+	}
+	
+	
+	@PostMapping("/verifiedToken")
+	public ResponseEntity<?> verifyingSignUpRequest(@RequestBody VerifiedTokenDto verifiedDto){
+		Optional<User> optionalUser = userRepository.findByVerifiedToken(verifiedDto.getToken());
+		if(optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			user.setVerifiedToken(null);
+			user.setVerified(true);
+			userRepository.save(user);
+			return ResponseEntity.ok().body(new MessageResponse(user.getEmail() + " is verified!!"));
+		} else {
+			return ResponseEntity.badRequest().body(new MessageResponse("ERROR: Invalid token"));
+		}
 	}
 	
 	@GetMapping("/list-users")
@@ -170,7 +223,6 @@ public class UserController {
 	}
 	
 	@GetMapping("/userById/{id}")
-//	@PreAuthorize("hasRole('ADMIN') or hasRole('USER') or hasRole('MODERATOR')")
 	@PreAuthorize("hasRole(''ADMIN)")
 	public ResponseEntity<?> getUserById(@PathVariable Long id){
 		Optional<User> optionalUser = userRepository.findById(id);

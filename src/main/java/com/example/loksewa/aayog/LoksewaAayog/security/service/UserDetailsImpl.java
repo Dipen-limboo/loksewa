@@ -23,10 +23,12 @@ public class UserDetailsImpl implements UserDetails {
 
 	  @JsonIgnore
 	  private String password;
+	  
+	  private boolean isVerified;
 
 	  private Collection<? extends GrantedAuthority> authorities;
 
-	  public UserDetailsImpl(Long id, String username, String email, String password,
+	  public UserDetailsImpl(Long id, String username, String email, String password, boolean isVerified,
 	      Collection<? extends GrantedAuthority> authorities) {
 	    this.id = id;
 	    this.username = username;
@@ -45,6 +47,7 @@ public class UserDetailsImpl implements UserDetails {
 	        user.getUsername(), 
 	        user.getEmail(),
 	        user.getPassword(), 
+	        user.isVerified(),
 	        authorities);
 	  }
 
@@ -59,6 +62,10 @@ public class UserDetailsImpl implements UserDetails {
 
 	  public String getEmail() {
 	    return email;
+	  }
+ 
+	  public boolean isVerified() {
+		return true;
 	  }
 
 	  @Override
