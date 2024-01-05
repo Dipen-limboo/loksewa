@@ -95,6 +95,11 @@ public class UserController {
 				.collect(Collectors.toList());
 		return ResponseEntity.ok(new JwtResponse(jwt, 
 				userDetails.getId(),
+				userDetails.getFirstname(),
+				userDetails.getMiddlename(),
+				userDetails.getLastname(),
+				userDetails.getDateOfbirth(),
+				userDetails.getPhone(),
 				userDetails.getUsername(),
 				userDetails.getEmail(),
 				roles)

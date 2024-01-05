@@ -22,11 +22,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.loksewa.aayog.LoksewaAayog.Entity.Category;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Option;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.OptionType;
+import com.example.loksewa.aayog.LoksewaAayog.Entity.Position;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Question;
+import com.example.loksewa.aayog.LoksewaAayog.Repository.CategoryRepo;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.OptionRepo;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.OptionTypeRepo;
+import com.example.loksewa.aayog.LoksewaAayog.Repository.PositionRepo;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.QuestionRepo;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.EditOptionDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.EditQuestionDto;
@@ -51,6 +55,12 @@ public class QuestionController {
 	
 	@Autowired
 	private OptionRepo optionRepo;
+	
+	@Autowired
+	private CategoryRepo categoryRepo;
+	
+	@Autowired
+	private PositionRepo positionRepo;
 
 	@PostMapping("/addingQuestion")
 	@PreAuthorize("hasRole('ADMIN')")
@@ -58,23 +68,45 @@ public class QuestionController {
 		Question question = new Question();
 		question.setQuestionText(questionDto.getQuestionText());
 		
-		int optionType = questionDto.getOptionType();
-		OptionType opt = optRepo.findById(optionType);
-		question.setOptionT(opt);
+		int categoryType = questionDto.getCategory();
+		Long categoryId = (long) categoryType;
+		Optional<Category> cate =  categoryRepo.findById(categoryId);
+		if (cate.isPresent()) {
+			question.setCategory(cate.get());
+			
+			Optional<Position> position = positionRepo.findById(questionDto.getPosition());
+			if(position.isPresent()) {
+				question.setPosition(position.get());
+				
+				question.setYear(questionDto.getYear());
+				
+				int optionType = questionDto.getOptionType();
+				OptionType opt = optRepo.findById(optionType);
+				question.setOptionT(opt);
+				
+				List<OptionsDto> optionDto = questionDto.getOptions();
+				List<Option> toSaveOptions = new ArrayList<>();
+				for(OptionsDto dtoOption : optionDto )	{
+					Option option = new Option();
+					option.setText(dtoOption.getOptionName());
+					option.setCorrect(dtoOption.isCorrect());
+					option.setQuestion(question);
+					toSaveOptions.add(option);
+				}		
+				
+				question.setOptions(toSaveOptions);
+				questionRepo.save(question);
+				return ResponseEntity.status(HttpStatus.CREATED).body(questionDto);
+			} else {
+				return ResponseEntity.badRequest().body(new MessageResponse("Category not found by Position id " + questionDto.getPosition()));
+			}
+			
+			
+		} else {
+			return ResponseEntity.badRequest().body(new MessageResponse("Category not found by category id " + categoryType));
+		}
 		
-		List<OptionsDto> optionDto = questionDto.getOptions();
-		List<Option> toSaveOptions = new ArrayList<>();
-		for(OptionsDto dtoOption : optionDto )	{
-			Option option = new Option();
-			option.setText(dtoOption.getOptionName());
-			option.setCorrect(dtoOption.isCorrect());
-			option.setQuestion(question);
-			toSaveOptions.add(option);
-		}		
 		
-		question.setOptions(toSaveOptions);
-		questionRepo.save(question);
-		return ResponseEntity.status(HttpStatus.CREATED).body(questionDto);
 	}
 	
 	@GetMapping("/listOfQuestions")
@@ -94,6 +126,10 @@ public class QuestionController {
 		for (Question question: questionPage.getContent()) {
 			ViewResponseDto responseDto = new ViewResponseDto();
 			responseDto.setId(question.getId());
+			int cateId= question.getCategory().getId().intValue();
+			responseDto.setCategory(cateId);
+			responseDto.setPosition(question.getPosition().getId());
+			responseDto.setYear(question.getYear());			
 			responseDto.setQuestion(question.getQuestionText());
 			responseDto.setOptionType(question.getOptionT().getId());
 			
@@ -119,6 +155,12 @@ public class QuestionController {
 		Optional<Question> question = questionRepo.findById(id);
 		EditQuestionDto editQuestionDto = new EditQuestionDto();
 		if(question.isPresent()) {
+			int categoryId = question.get().getCategory().getId().intValue();
+			editQuestionDto.setCategory(categoryId);
+			
+			editQuestionDto.setPosition(question.get().getPosition().getId());
+			
+			editQuestionDto.setYear(question.get().getYear());
 			
 			editQuestionDto.setQuestion(question.get().getQuestionText());
 			
@@ -135,9 +177,11 @@ public class QuestionController {
 				listForEdit.add(editOptionDto);
 			}
 			editQuestionDto.setOption(listForEdit);
+			return ResponseEntity.ok().body(editQuestionDto);
+		} else {
+			return ResponseEntity.badRequest().body(new MessageResponse("Question not found by question id" + id));
 		}
-		
-		return ResponseEntity.ok().body(editQuestionDto);
+	
 	}
 	
 	@PutMapping("/editQuestions/{id}")
@@ -150,27 +194,48 @@ public class QuestionController {
 		Question question = OptionalQuestion.get(); 
 		List<Option> optionList = optionRepo.findByQuestion(question);
 		
-		question.setQuestionText(editQuestionDto.getQuestion());
+		int categoryId = editQuestionDto.getCategory();
+		Long cateId = (long) categoryId;
+		Optional<Category> category = categoryRepo.findById(cateId);
 		
-		int optionType = editQuestionDto.getOptionType();
-		OptionType opt = optRepo.findById(optionType);
-		question.setOptionT(opt);
-		
-		List<EditOptionDto> editOptionDtoList = editQuestionDto.getOption();
-		
-		
-		for (int i= 0; i < Math.min(optionList.size(), editOptionDtoList.size()); i++ ) {
-			Option existingOption = optionList.get(i);
-			EditOptionDto editOptionDto = editOptionDtoList.get(i);
+		if(category.isPresent()) {
+			question.setCategory(category.get());
 			
-			existingOption.setText(editOptionDto.getOption());
-			existingOption.setCorrect(editOptionDto.isCheck());
-			optionRepo.save(existingOption);
+			Optional<Position> optionalPosition = positionRepo.findById(editQuestionDto.getPosition());
+			
+			if(optionalPosition.isPresent()) {
+				Position position = optionalPosition.get();
+				question.setPosition(position);
+				question.setYear(editQuestionDto.getYear());
+				question.setQuestionText(editQuestionDto.getQuestion());
+				
+				int optionType = editQuestionDto.getOptionType();
+				OptionType opt = optRepo.findById(optionType);
+				question.setOptionT(opt);
+				
+				List<EditOptionDto> editOptionDtoList = editQuestionDto.getOption();
+				
+				
+				for (int i= 0; i < Math.min(optionList.size(), editOptionDtoList.size()); i++ ) {
+					Option existingOption = optionList.get(i);
+					EditOptionDto editOptionDto = editOptionDtoList.get(i);
+					
+					existingOption.setText(editOptionDto.getOption());
+					existingOption.setCorrect(editOptionDto.isCheck());
+					optionRepo.save(existingOption);
+					
+					
+				}
+				questionRepo.save(question);
+				return ResponseEntity.ok().body(editQuestionDto);
+			} else {
+				return ResponseEntity.badRequest().body(new MessageResponse("Position not found by id" + editQuestionDto.getPosition()));
+			}
 			
 			
+		} else {
+			return ResponseEntity.badRequest().body(new MessageResponse("Category not found by id" +categoryId));
 		}
-		questionRepo.save(question);
-		return ResponseEntity.ok().body(editQuestionDto);
 	} 
 	else {
 		return ResponseEntity.notFound().build();

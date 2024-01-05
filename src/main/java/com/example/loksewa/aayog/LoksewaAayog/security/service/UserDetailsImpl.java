@@ -1,6 +1,7 @@
 package com.example.loksewa.aayog.LoksewaAayog.security.service;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -25,19 +26,34 @@ public class UserDetailsImpl implements UserDetails {
 	  private String password;
 	  
 	  private boolean isVerified;
+	  
+	  private String firstname;
+	  private String middlename;
+	  private String lastname;
+	  private Date dateOfbirth;
+	  private String phone;
 
 	  private Collection<? extends GrantedAuthority> authorities;
 
+	  
 	  public UserDetailsImpl(Long id, String username, String email, String password, boolean isVerified,
-	      Collection<? extends GrantedAuthority> authorities) {
-	    this.id = id;
-	    this.username = username;
-	    this.email = email;
-	    this.password = password;
-	    this.authorities = authorities;
-	  }
+			String firstname, String middlename, String lastname, Date dateOfbirth, String phone,
+			Collection<? extends GrantedAuthority> authorities) {
+		super();
+		this.id = id;
+		this.username = username;
+		this.email = email;
+		this.password = password;
+		this.isVerified = isVerified;
+		this.firstname = firstname;
+		this.middlename = middlename;
+		this.lastname = lastname;
+		this.dateOfbirth = dateOfbirth;
+		this.phone = phone;
+		this.authorities = authorities;
+	}
 
-	  public static UserDetailsImpl build(User user) {
+	public static UserDetailsImpl build(User user) {
 	    List<GrantedAuthority> authorities = user.getRoles().stream()
 	        .map(role -> new SimpleGrantedAuthority(role.getName().name()))
 	        .collect(Collectors.toList());
@@ -48,6 +64,11 @@ public class UserDetailsImpl implements UserDetails {
 	        user.getEmail(),
 	        user.getPassword(), 
 	        user.isVerified(),
+	        user.getFirstName(),
+	        user.getMiddleName(),
+	        user.getLastName(),
+	        user.getBirthDate(),
+	        user.getPhone(),
 	        authorities);
 	  }
 
@@ -63,8 +84,29 @@ public class UserDetailsImpl implements UserDetails {
 	  public String getEmail() {
 	    return email;
 	  }
- 
-	  public boolean isVerified() {
+	  
+	  
+	  public String getFirstname() {
+		return firstname;
+	}
+
+	public String getMiddlename() {
+		return middlename;
+	}
+
+	public String getLastname() {
+		return lastname;
+	}
+
+	public Date getDateOfbirth() {
+		return dateOfbirth;
+	}
+
+	public String getPhone() {
+		return phone;
+	}
+
+	public boolean isVerified() {
 		return true;
 	  }
 
