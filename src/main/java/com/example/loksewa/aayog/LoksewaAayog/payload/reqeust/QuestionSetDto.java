@@ -11,9 +11,11 @@ public class QuestionSetDto {
 	private int id;
 	
 	@NotNull
-	private int position;
+	private Long category;
 	
-	private int year;
+	@NotNull
+	private int position;
+
 	
 	private List<QuestionIdDto> questionId;
 
@@ -22,11 +24,11 @@ public class QuestionSetDto {
 		// TODO Auto-generated constructor stub
 	}
 
-	public QuestionSetDto(int id, @NotNull int position, int year, List<QuestionIdDto> questionId) {
+	public QuestionSetDto(int id, @NotNull Long category, @NotNull int position,  List<QuestionIdDto> questionId) {
 		super();
 		this.id = id;
+		this.category=category;
 		this.position = position;
-		this.year = year;
 		this.questionId = questionId;
 	}
 
@@ -38,13 +40,7 @@ public class QuestionSetDto {
 		this.position = position;
 	}
 
-	public int getYear() {
-		return year;
-	}
 
-	public void setYear(int year) {
-		this.year = year;
-	}
 
 	public int getId() {
 		return id;
@@ -61,6 +57,13 @@ public class QuestionSetDto {
 	public void setQuestionId(List<QuestionIdDto> questionId) {
 		this.questionId = questionId;
 	}
-	
+
+	public Long getCategory() {
+		return category;
+	}
+
+	public void setCategory(Long category) {
+		this.category = category;
+	}
 	
 }

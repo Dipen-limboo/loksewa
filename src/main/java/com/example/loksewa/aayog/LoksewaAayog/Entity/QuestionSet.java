@@ -28,19 +28,19 @@ public class QuestionSet {
 	private Long id;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
+	@NotNull(message="Select for which Category")
+    @JoinColumn(name = "category_id")
+    private Category category;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
 	@NotNull(message="Select for which position")
     @JoinColumn(name = "position_id")
     private Position position;
 	
-	@Column(name="year_set")
-	@Min(value = 2069, message = "Year must start with 20")
-	@Max(value = 2081, message = "Year must not exceed 2099")
-	private int year;  
-	
 	
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name="sets_question",
-		joinColumns = @JoinColumn(name="set_id"),
+		joinColumns = @JoinColumn(name="quesitonset_id"),
 		inverseJoinColumns = @JoinColumn(name="question_id")
 		)
 	@Size(max = 20, message = "The number of questions cannot exceed 20")
@@ -53,13 +53,12 @@ public class QuestionSet {
 	}
 	
 	
-	public QuestionSet(Long id, @NotNull(message = "Select for which position") Position position,
-			@Min(value = 2069, message = "Year must start with 20") @Max(value = 2081, message = "Year must not exceed 2099") int year,
-			@Size(max = 20, message = "The number of questions cannot exceed 20") List<Question> question) {
+	public QuestionSet(Long id, @NotNull(message = "Select for which Category") Category category, @NotNull(message = "Select for which position") Position position,
+					@Size(max = 20, message = "The number of questions cannot exceed 20") List<Question> question) {
 		super();
+		this.category = category;
 		this.id = id;
 		this.position = position;
-		this.year = year;
 		this.question = question;
 	}
 
@@ -83,17 +82,6 @@ public class QuestionSet {
 		this.position = position;
 	}
 
-
-	public int getYear() {
-		return year;
-	}
-
-
-	public void setYear(int year) {
-		this.year = year;
-	}
-
-
 	public List<Question> getQuestion() {
 		return question;
 	}
@@ -101,6 +89,16 @@ public class QuestionSet {
 
 	public void setQuestion(List<Question> question) {
 		this.question = question;
+	}
+
+
+	public Category getCategory() {
+		return category;
+	}
+
+
+	public void setCategory(Category category) {
+		this.category = category;
 	}
 	
 }
