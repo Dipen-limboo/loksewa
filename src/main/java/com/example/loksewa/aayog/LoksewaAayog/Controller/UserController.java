@@ -208,7 +208,12 @@ public class UserController {
 		for(User user: listOfUsers) {
 			UserResponseDto userResponseDto = new UserResponseDto();
 			userResponseDto.setId(user.getId());
+			userResponseDto.setFirstName(user.getFirstName());
+			userResponseDto.setMiddleName(user.getMiddleName());
+			userResponseDto.setLastName(user.getLastName());
+			userResponseDto.setDateOfBirth(user.getBirthDate());
 			userResponseDto.setUsername(user.getUsername());
+			userResponseDto.setPhone(user.getPhone());
 			userResponseDto.setEmail(user.getEmail());
 			
 			Set<RoleResponseDto> roleDto = new HashSet<>();
@@ -228,7 +233,7 @@ public class UserController {
 	}
 	
 	@GetMapping("/userById/{id}")
-	@PreAuthorize("hasRole(''ADMIN)")
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<?> getUserById(@PathVariable Long id){
 		Optional<User> optionalUser = userRepository.findById(id);
 		
@@ -237,7 +242,12 @@ public class UserController {
 			
 			UserResponseDto userResponseDto = new UserResponseDto();
 			userResponseDto.setId(id);
+			userResponseDto.setFirstName(user.getFirstName());
+			userResponseDto.setMiddleName(user.getMiddleName());
+			userResponseDto.setLastName(user.getLastName());
+			userResponseDto.setDateOfBirth(user.getBirthDate());
 			userResponseDto.setUsername(user.getUsername());
+			userResponseDto.setPhone(user.getPhone());
 			userResponseDto.setEmail(user.getEmail());
 			
 			Set<RoleResponseDto> setRoledto = new HashSet<>();
@@ -268,7 +278,12 @@ public class UserController {
 			
 			UserDetailsImpl userDetailsImpl = (UserDetailsImpl) auth.getPrincipal();
 			if(userDetailsImpl.getId().equals(user.getId())) {
-				user.setEmail(userDto.getEmail());
+				user.setFirstName(userDto.getFirstName());
+				user.setMiddleName(userDto.getMiddleName());
+				user.setLastName(userDto.getLastName());
+				user.setBirthDate(userDto.getDateOfBirth());
+				user.setUsername(userDto.getUsername());
+				user.setPhone(userDto.getPhone());
 				user.setUsername(userDto.getUsername());
 				user.setPassword(encoder.encode(userDto.getPassword()));
 				userRepository.save(user);
