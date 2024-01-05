@@ -36,6 +36,7 @@ import com.example.loksewa.aayog.LoksewaAayog.Entity.Role;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.User;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.RoleRepository;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.UserRepository;
+import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.ChangeRoleDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.LoginRequest;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.SignupRequest;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.UserDto;
@@ -202,7 +203,7 @@ public class UserController {
 	
 	@PutMapping("/userById/{id}")
 	@PreAuthorize("hasRole('ADMIN') or hasRole('USER') or hasRole('MODERATOR')")
-	public ResponseEntity<?> updateUserDetails(@PathVariable Long id, @RequestBody UserDto userDto, Authentication auth){
+	public ResponseEntity<?> updateUserDetails(@PathVariable Long id,@Valid @RequestBody UserDto userDto, Authentication auth){
 		Optional<User> optionalUser = userRepository.findById(id);
 		
 		if(optionalUser.isPresent()) {
@@ -230,4 +231,36 @@ public class UserController {
 		return ResponseEntity.ok().body(new MessageResponse("User id " +id + " deleted successfully!!"));
 	}
 
+	@PutMapping("/changingRole/{id}")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<?> changingUserRoleById(@PathVariable Long id, @RequestBody ChangeRoleDto changeRoleDto) {
+	    Optional<User> optionalUser = userRepository.findById(id);
+
+	    if (optionalUser.isPresent()) {
+	        User user = optionalUser.get();
+	        Set<String> roleSet = changeRoleDto.getRole();
+	        Set<Role> roles = roleSet.stream()
+	                .map(roleName -> {
+	                    switch (roleName) {
+	                        case "admin":
+	                            return roleRepository.findByName(ERole.ROLE_ADMIN)
+	                                    .orElseThrow(() -> new RuntimeException("Error: Role 'ADMIN' not found."));
+	                        case "mod":
+	                            return roleRepository.findByName(ERole.ROLE_MODERATOR)
+	                                    .orElseThrow(() -> new RuntimeException("Error: Role 'MODERATOR' not found."));
+	                        default:
+	                            return roleRepository.findByName(ERole.ROLE_USER)
+	                                    .orElseThrow(() -> new RuntimeException("Error: Role 'USER' not found."));
+	                    }
+	                })
+	                .collect(Collectors.toSet());
+
+	        user.setRoles(roles);
+	        userRepository.save(user);
+
+	        return ResponseEntity.ok().body(changeRoleDto);
+	    } else {
+	        return ResponseEntity.badRequest().body(new MessageResponse("Error: User not found!! "));
+	    }
+	}
 }
