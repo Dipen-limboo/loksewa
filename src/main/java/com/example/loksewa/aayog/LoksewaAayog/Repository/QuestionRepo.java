@@ -13,8 +13,8 @@ public interface QuestionRepo extends JpaRepository<Question, Long>{
 	List<Question> findByIdIn(List<Long> ids);
 	
 	Optional<Question> findById(Long id);
-	
-
 
 	List<Question> findByPositionAndCategory(Position position, Category cate);
+
+	List<Question> findByYearAndCategoryAndPosition(int year, Category cate, Position position);
 }

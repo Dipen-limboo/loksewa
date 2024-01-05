@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Category;
+import com.example.loksewa.aayog.LoksewaAayog.Entity.Option;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Position;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Question;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.QuestionSet;
@@ -33,7 +34,10 @@ import com.example.loksewa.aayog.LoksewaAayog.Repository.QuestionRepo;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.QuestionsetRepo;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.QuestionIdDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.QuestionSetDto;
+import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.QuestionSetYearDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.MessageResponse;
+import com.example.loksewa.aayog.LoksewaAayog.payload.response.OptionDto;
+import com.example.loksewa.aayog.LoksewaAayog.payload.response.ViewResponseDto;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -80,21 +84,16 @@ public class QuestionSetController {
 		        if(!listQuestion.isEmpty()) {
 		        Random random = new Random();
 		        
-		       for(int i=0; i < 2; i++) {
+		        //random make 20;
+		        for(int i=0; i < 2; i++) {
 		    	   	int randomIndex = random.nextInt(listQuestion.size());
 			        
 			        Question randomQuestion = listQuestion.get(randomIndex);
 			        
 			        questionlistSet.add(randomQuestion);
 			        
-			        listQuestion.remove(randomIndex);
-			        
-			       
-		       }
-		        
-		        
+		                   }
 		        }
-		       		       	
 		        questionSet.setQuestion(questionlistSet);
 		        questionsetRepo.save(questionSet);
 		        
@@ -217,5 +216,53 @@ public class QuestionSetController {
 	public ResponseEntity<?> deleteQuestionSetById(@PathVariable Long id){
 		questionsetRepo.deleteById(id);
 		return ResponseEntity.ok().body(new MessageResponse("Successfully Deleted the question set id: " +id));
+	}
+	
+
+	@GetMapping("/getQuestionsByYear/{year}/{category_id}/{position_id}")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<?> getQuestionSetByyear(@PathVariable int year, @PathVariable Long category_id, @PathVariable Long position_id) {
+		
+		Optional<Category> cateOptional = categoryRepo.findById(category_id);
+		if(cateOptional.isPresent()) {
+			Category cate = cateOptional.get();
+			Optional<Position> optionalPosition = positionRepo.findById(position_id);
+			if(optionalPosition.isPresent()) {
+				Position position = optionalPosition.get();
+				List<Question> questionList = questionRepo.findByYearAndCategoryAndPosition(year, cate, position);
+				List<ViewResponseDto> listDto = new ArrayList<>();
+				if(!questionList.isEmpty()) {
+					for(Question question: questionList) {
+						ViewResponseDto responseDto = new ViewResponseDto();
+						responseDto.setId(question.getId());
+						int cateId= question.getCategory().getId().intValue();
+						responseDto.setCategory(cateId);
+						responseDto.setPosition(question.getPosition().getId());
+						responseDto.setYear(question.getYear());			
+						responseDto.setQuestion(question.getQuestionText());
+						responseDto.setOptionType(question.getOptionT().getId());
+						
+						List<OptionDto> optionDto = new ArrayList<>();
+						for(Option option: question.getOptions()) {
+							OptionDto optDto = new OptionDto();
+							optDto.setOption(option.getText());
+							optDto.setCheck(option.isCorrect());
+							optionDto.add(optDto);
+						}
+						responseDto.setOptionResponse(optionDto);
+						
+						listDto.add(responseDto);
+					}
+					return ResponseEntity.ok().body(listDto);
+				}else {
+					return ResponseEntity.badRequest().body(new MessageResponse("Error: question List is empty"));
+				}
+			} else {
+				return ResponseEntity.badRequest().body(new MessageResponse("Error: Position not found by id " + position_id));
+			}
+		} else {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error: Category not found by id " + category_id ));
+		}
+
 	}
 }
