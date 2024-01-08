@@ -1,13 +1,16 @@
 package com.example.loksewa.aayog.LoksewaAayog.payload.response;
 
-public class Score {
+public class ScoreResponseDto {
 	private int total;
 	private int right;
 	
-	public Score(int total, int right) {
+	public ScoreResponseDto(int total, int right) {
 		super();
 		this.total = total;
 		this.right = right;
+	}
+	public ScoreResponseDto() {
+		// TODO Auto-generated constructor stub
 	}
 	public int getTotal() {
 		return total;

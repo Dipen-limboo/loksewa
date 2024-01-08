@@ -1,4 +1,4 @@
-package com.example.loksewa.aayog.LoksewaAayog.payload.reqeust;
+package com.example.loksewa.aayog.LoksewaAayog.payload.response;
 
 import java.util.List;
 

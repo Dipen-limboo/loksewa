@@ -11,4 +11,6 @@ import com.example.loksewa.aayog.LoksewaAayog.Entity.Question;
 public interface OptionRepo extends JpaRepository<Option, Long> {
 	List<Option> findByQuestion(Question question);
 	Optional<Option> findById(Long optionsId);
+
+	int countByIdAndIsCorrect(long optionId, boolean check);
 }

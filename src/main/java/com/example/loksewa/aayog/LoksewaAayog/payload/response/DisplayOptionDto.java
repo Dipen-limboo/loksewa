@@ -1,4 +1,4 @@
-package com.example.loksewa.aayog.LoksewaAayog.payload.reqeust;
+package com.example.loksewa.aayog.LoksewaAayog.payload.response;
 
 public class DisplayOptionDto {
 	private long id;

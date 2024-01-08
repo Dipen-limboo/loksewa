@@ -1,13 +1,14 @@
 package com.example.loksewa.aayog.LoksewaAayog.Entity;
 
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -23,7 +24,9 @@ public class ScoreBoard {
 	@Column(name="correct_answers")
 	private int right;
 	
-
+	@OneToMany(mappedBy="board", cascade = CascadeType.ALL)
+	private List<UserScore> score;
+	
 	public ScoreBoard() {
 		super();
 		// TODO Auto-generated constructor stub
