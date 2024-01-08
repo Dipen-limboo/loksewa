@@ -6,7 +6,6 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -80,12 +79,7 @@ public class User {
      inverseJoinColumns = @JoinColumn(name = "role_id"))
   private Set<Role> roles = new HashSet<>();
 
-  @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-  @JoinTable(name="user_score_board",
-  			joinColumns=@JoinColumn(name="user_id"),
-  			inverseJoinColumns=@JoinColumn(name="score_id")
-		  )
-  private Set<UserScore> scores;
+
   
   @Column(name="is_verified")
   private boolean isVerified =false;
@@ -146,86 +140,75 @@ public class User {
 	  this.roles = roles;
   }
 
-  public Set<UserScore> getScores() {
-      return scores;
+  public String getFirstName() {
+	  return firstName;
   }
 
-  public void setScores(Set<UserScore> scores) {
-	  this.scores = scores;
+  public void setFirstName(String firstName) {
+	  this.firstName = firstName;
   }
 
-public String getFirstName() {
-	return firstName;
-}
+  public String getMiddleName() {
+	  return middleName;
+  }
 
-public void setFirstName(String firstName) {
-	this.firstName = firstName;
-}
+  public void setMiddleName(String middleName) {
+	  this.middleName = middleName;
+  }
 
-public String getMiddleName() {
-	return middleName;
-}
+  public String getLastName() {
+	  return lastName;
+  }
 
-public void setMiddleName(String middleName) {
-	this.middleName = middleName;
-}
+  public void setLastName(String lastName) {
+	  this.lastName = lastName;
+  }
 
-public String getLastName() {
-	return lastName;
-}
+  public String getConfirmPassword() {
+	  return ConfirmPassword;
+  }
 
-public void setLastName(String lastName) {
-	this.lastName = lastName;
-}
+  public void setConfirmPassword(String confirmPassword) {
+	  ConfirmPassword = confirmPassword;
+  }
 
-public String getConfirmPassword() {
-	return ConfirmPassword;
-}
+  public String getPhone() {
+	  return phone;
+  }
 
-public void setConfirmPassword(String confirmPassword) {
-	ConfirmPassword = confirmPassword;
-}
+  public void setPhone(String phone) {
+	  this.phone = phone;
+  }
 
-public String getPhone() {
-	return phone;
-}
+  public Date getBirthDate() {
+	  return birthDate;
+  }
 
-public void setPhone(String phone) {
-	this.phone = phone;
-}
+  public void setBirthDate(Date birthDate) {
+	  this.birthDate = birthDate;
+  }
 
-public Date getBirthDate() {
-	return birthDate;
-}
+  public boolean isVerified() {
+	  return isVerified;
+  }
 
-public void setBirthDate(Date birthDate) {
-	this.birthDate = birthDate;
-}
+  public void setVerified(boolean isVerified) {
+	  this.isVerified = isVerified;
+  }
 
-public boolean isVerified() {
-	return isVerified;
-}
+  public Date getVerifiedDate() {
+	  return verifiedDate;
+  }
 
-public void setVerified(boolean isVerified) {
-	this.isVerified = isVerified;
-}
+  public void setVerifiedDate(Date verifiedDate) {
+	  this.verifiedDate = verifiedDate;
+  }
 
-public Date getVerifiedDate() {
-	return verifiedDate;
-}
+  public String getVerifiedToken() {
+	  return verifiedToken;
+  }
 
-public void setVerifiedDate(Date verifiedDate) {
-	this.verifiedDate = verifiedDate;
-}
-
-public String getVerifiedToken() {
-	return verifiedToken;
-}
-
-public void setVerifiedToken(String verifiedToken) {
-	this.verifiedToken = verifiedToken;
-}
-
-
- 
+  public void setVerifiedToken(String verifiedToken) {
+	  this.verifiedToken = verifiedToken;
+  }
 }
