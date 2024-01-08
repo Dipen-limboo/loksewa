@@ -5,6 +5,8 @@ import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -14,8 +16,6 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -37,6 +37,10 @@ public class QuestionSet {
     @JoinColumn(name = "position_id")
     private Position position;
 	
+	@Enumerated(EnumType.STRING)
+    @NotNull(message="Select Options")
+    @Column(name = "options_set")
+    private SetOption options;
 	
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name="sets_question",
@@ -46,7 +50,7 @@ public class QuestionSet {
 	@Size(max = 20, message = "The number of questions cannot exceed 20")
 	private List<Question> question = new ArrayList<>();
 
-
+	
 	public QuestionSet() {
 		super();
 		// TODO Auto-generated constructor stub
@@ -54,12 +58,14 @@ public class QuestionSet {
 	
 	
 	public QuestionSet(Long id, @NotNull(message = "Select for which Category") Category category, @NotNull(message = "Select for which position") Position position,
-					@Size(max = 20, message = "The number of questions cannot exceed 20") List<Question> question) {
+			@NotNull(message = "Select options") SetOption options, @Size(max = 20, message = "The number of questions cannot exceed 20") List<Question> question) {
 		super();
 		this.category = category;
 		this.id = id;
 		this.position = position;
+		this.options = options;
 		this.question = question;
+		
 	}
 
 
@@ -100,5 +106,16 @@ public class QuestionSet {
 	public void setCategory(Category category) {
 		this.category = category;
 	}
+
+
+	public SetOption getOptions() {
+		return options;
+	}
+
+
+	public void setOptions(SetOption options) {
+		this.options = options;
+	}
+	
 	
 }

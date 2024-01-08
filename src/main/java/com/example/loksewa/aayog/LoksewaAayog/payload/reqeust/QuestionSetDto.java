@@ -1,6 +1,7 @@
 package com.example.loksewa.aayog.LoksewaAayog.payload.reqeust;
 
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -16,6 +17,7 @@ public class QuestionSetDto {
 	@NotNull
 	private int position;
 
+	private Set<String> setOption;
 	
 	private List<QuestionIdDto> questionId;
 
@@ -24,11 +26,12 @@ public class QuestionSetDto {
 		// TODO Auto-generated constructor stub
 	}
 
-	public QuestionSetDto(int id, @NotNull Long category, @NotNull int position,  List<QuestionIdDto> questionId) {
+	public QuestionSetDto(int id, @NotNull Long category, @NotNull int position, Set<String> setOption, List<QuestionIdDto> questionId) {
 		super();
 		this.id = id;
 		this.category=category;
 		this.position = position;
+		this.setOption = setOption;
 		this.questionId = questionId;
 	}
 
@@ -39,8 +42,6 @@ public class QuestionSetDto {
 	public void setPosition(int position) {
 		this.position = position;
 	}
-
-
 
 	public int getId() {
 		return id;
@@ -60,6 +61,14 @@ public class QuestionSetDto {
 
 	public Long getCategory() {
 		return category;
+	}
+
+	public Set<String> getSetOption() {
+		return setOption;
+	}
+
+	public void setSetOption(Set<String> setOption) {
+		this.setOption = setOption;
 	}
 
 	public void setCategory(Long category) {

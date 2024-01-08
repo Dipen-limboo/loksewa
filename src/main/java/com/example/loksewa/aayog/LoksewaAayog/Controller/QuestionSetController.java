@@ -1,9 +1,11 @@
 package com.example.loksewa.aayog.LoksewaAayog.Controller;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -28,13 +30,13 @@ import com.example.loksewa.aayog.LoksewaAayog.Entity.Option;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Position;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Question;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.QuestionSet;
+import com.example.loksewa.aayog.LoksewaAayog.Entity.SetOption;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.CategoryRepo;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.PositionRepo;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.QuestionRepo;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.QuestionsetRepo;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.QuestionIdDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.QuestionSetDto;
-import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.QuestionSetYearDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.MessageResponse;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.OptionDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.ViewResponseDto;
@@ -62,49 +64,85 @@ public class QuestionSetController {
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<?> creatingQuestionSet(@Valid @RequestBody QuestionSetDto questionSetDto) {
 	    QuestionSet questionSet = new QuestionSet();
-	    
+
 	    Optional<Category> optionalCategory = categoryRepo.findById(questionSetDto.getCategory());
-	    if(optionalCategory.isPresent()) {
-	    	Category cate = optionalCategory.get();
-	    	questionSet.setCategory(cate);
-	    	
-	    	int positionIds = questionSetDto.getPosition();
-		    
-		    Optional<Position> positionOptional = positionRepo.findById(positionIds);
+	    if (optionalCategory.isPresent()) {
+	        Category cate = optionalCategory.get();
+	        questionSet.setCategory(cate);
 
-		    if (positionOptional.isPresent()) {
-		        Position position = positionOptional.get();
-		        questionSet.setPosition(position);
+	        int positionIds = questionSetDto.getPosition();
+
+	        Optional<Position> positionOptional = positionRepo.findById(positionIds);
+
+	        if (positionOptional.isPresent()) {
+	            Position position = positionOptional.get();
+	            questionSet.setPosition(position);
+
+	            Set<String> strOptions = questionSetDto.getSetOption();
+	            System.out.println(">>>>>>>>>>>>>>>>"+strOptions);
+	            if (strOptions == null) {
+	                questionSet.setOptions(SetOption.SELECT);
+	            } else {
+	                strOptions.forEach(option -> {
+	                    switch (option) {
+	                        case "random":
+	                            questionSet.setOptions(SetOption.RANDOM);
+	                            break;
+	                        default:
+	                            questionSet.setOptions(SetOption.SELECT);
+	                    }
+	                });
+	            }
+
+	           
+	            	
+	                if (strOptions != null && strOptions.contains("random")) {
+	                    List<Question> listQuestion = questionRepo.findByPositionAndCategory(position, cate);
+	                    List<Question> questionlistSet = new ArrayList<>();
+
+	                    if (!listQuestion.isEmpty()) {
+	                        Random random = new Random();
+
+	                        // random make 20;
+	                        for (int i = 0; i < 2; i++) {
+	                            int randomIndex = random.nextInt(listQuestion.size());
+
+	                            Question randomQuestion = listQuestion.get(randomIndex);
+
+	                            questionlistSet.add(randomQuestion);
+	                        }
+	                    }
+	                    questionSet.setQuestion(questionlistSet);
+	                    questionsetRepo.save(questionSet);
+
+	                } else {
+	                    List<QuestionIdDto> questionIdDto = questionSetDto.getQuestionId();
+	                    List<Question> questions = new ArrayList<>();
+	                    for (QuestionIdDto questiondto : questionIdDto) {
+	                        Long id = questiondto.getId();
+	                        Optional<Question> optionalQuestion = questionRepo.findById(id);
+	                        if (optionalQuestion.isPresent()) {
+	                            Question question = optionalQuestion.get();
+	                            question.setId(id);
+	                            questions.add(question);
+	                        }
+	                    }
+	                    questionSet.setQuestion(questions);
+	                    questionsetRepo.save(questionSet);
+
+	                }
 
 
-		        List<Question> listQuestion = questionRepo.findByPositionAndCategory(position, cate);
-		        List<Question> questionlistSet = new ArrayList<>();
-		        System.out.println(">>>>>>>>>>>>>"+listQuestion);
-		        
-		        if(!listQuestion.isEmpty()) {
-		        Random random = new Random();
-		        
-		        //random make 20;
-		        for(int i=0; i < 2; i++) {
-		    	   	int randomIndex = random.nextInt(listQuestion.size());
-			        
-			        Question randomQuestion = listQuestion.get(randomIndex);
-			        
-			        questionlistSet.add(randomQuestion);
-			        
-		                   }
-		        }
-		        questionSet.setQuestion(questionlistSet);
-		        questionsetRepo.save(questionSet);
-		        
-		        return ResponseEntity.status(HttpStatus.CREATED).body(questionSet);
-		    } else {
-		    	  return ResponseEntity.badRequest().body(new MessageResponse("ERROR: Position with Id " + positionIds + " not Found."));
-		    }
+	            return ResponseEntity.status(HttpStatus.CREATED).body(questionSet);
+
+	        } else {
+	            return ResponseEntity.badRequest().body(new MessageResponse("ERROR: Position with Id " + positionIds + " not Found."));
+	        }
 	    } else {
 	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Category with ID " + questionSetDto.getCategory() + " not found");
 	    }
 	}
+
 	
 	@GetMapping("/listOfSetQuestions")
 	@PreAuthorize("hasRole('ADMIN')")
@@ -131,6 +169,10 @@ public class QuestionSetController {
 	    	int positionId = position.getId().intValue();
 	    	questionSetDto.setPosition(positionId);
 	    	
+	    	SetOption options = questionSet.getOptions();
+	    	Set<String> optionSet = new HashSet<>();
+	    	optionSet.add(options.name());
+	    	questionSetDto.setSetOption(optionSet);
 	    	
 	    	List<QuestionIdDto> questionIds = new ArrayList<>();
 	    	for(Question question: questionSet.getQuestion()) {
@@ -161,6 +203,10 @@ public class QuestionSetController {
 			int positionId = position.getId().intValue();
 			questionSetDto.setPosition(positionId);
 			
+			SetOption options = questionSet.get().getOptions();
+	    	Set<String> optionSet = new HashSet<>();
+	    	optionSet.add(options.name());
+	    	questionSetDto.setSetOption(optionSet);
 			
 			List<QuestionIdDto> questionIds = new ArrayList<>();
 			for(Question question: questions.getQuestion()) {
