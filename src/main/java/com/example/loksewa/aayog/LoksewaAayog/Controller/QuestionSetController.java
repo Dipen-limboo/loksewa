@@ -96,24 +96,33 @@ public class QuestionSetController {
 
 	           
 	            	
-	                if (strOptions != null && strOptions.contains("random")) {
-	                    List<Question> listQuestion = questionRepo.findByPositionAndCategory(position, cate);
-	                    List<Question> questionlistSet = new ArrayList<>();
+	            if (strOptions != null && strOptions.contains("random")) {
+	                List<Question> listQuestion = questionRepo.findByPositionAndCategory(position, cate);
+	                List<Question> questionlistSet = new ArrayList<>();
 
-	                    if (!listQuestion.isEmpty()) {
-	                        Random random = new Random();
+	                if (!listQuestion.isEmpty()) {
+	                    Random random = new Random();
+	                    Set<Integer> selectedIndices = new HashSet<>();
 
-	                        // random make 20;
-	                        for (int i = 0; i < 2; i++) {
-	                            int randomIndex = random.nextInt(listQuestion.size());
+	                    int maxQuestions = Math.min(2, listQuestion.size());
 
-	                            Question randomQuestion = listQuestion.get(randomIndex);
+	                    for (int i = 0; i < maxQuestions; i++) {
+	                        int randomIndex;
 
-	                            questionlistSet.add(randomQuestion);
-	                        }
-	                    }
-	                    questionSet.setQuestion(questionlistSet);
-	                    questionsetRepo.save(questionSet);
+	                        do {
+	                            randomIndex = random.nextInt(listQuestion.size());
+	                        } while (selectedIndices.contains(randomIndex));
+
+	                        selectedIndices.add(randomIndex);
+
+	                        Question randomQuestion = listQuestion.get(randomIndex);
+	                        questionlistSet.add(randomQuestion);
+	                    
+	                }
+
+	                questionSet.setQuestion(questionlistSet);
+	                questionsetRepo.save(questionSet);
+	            }
 
 	                } else {
 	                    List<QuestionIdDto> questionIdDto = questionSetDto.getQuestionId();
@@ -287,16 +296,22 @@ public class QuestionSetController {
 						responseDto.setYear(question.getYear());			
 						responseDto.setQuestion(question.getQuestionText());
 						responseDto.setOptionType(question.getOptionT().getId());
-						
 						List<OptionDto> optionDto = new ArrayList<>();
-						for(Option option: question.getOptions()) {
+						if(question.getOptionT().getId() == 3) {
 							OptionDto optDto = new OptionDto();
-							optDto.setOption(option.getText());
-							optDto.setCheck(option.isCorrect());
+							optDto.setOption(null);
+							optDto.setCheck(false);
 							optionDto.add(optDto);
+							responseDto.setOptionResponse(optionDto);
+						} else {
+							for(Option option: question.getOptions()) {
+								OptionDto optDto = new OptionDto();
+								optDto.setOption(option.getText());
+								optDto.setCheck(option.isCorrect());
+								optionDto.add(optDto);
+							}
+							responseDto.setOptionResponse(optionDto);
 						}
-						responseDto.setOptionResponse(optionDto);
-						
 						listDto.add(responseDto);
 					}
 					return ResponseEntity.ok().body(listDto);

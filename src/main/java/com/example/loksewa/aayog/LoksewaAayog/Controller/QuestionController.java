@@ -84,17 +84,25 @@ public class QuestionController {
 				OptionType opt = optRepo.findById(optionType);
 				question.setOptionT(opt);
 				
-				List<OptionsDto> optionDto = questionDto.getOptions();
-				List<Option> toSaveOptions = new ArrayList<>();
-				for(OptionsDto dtoOption : optionDto )	{
+				if(opt.getId() == 3) {
+					List<Option> saveOptionsNull = new ArrayList<>();
 					Option option = new Option();
-					option.setText(dtoOption.getOptionName());
-					option.setCorrect(dtoOption.isCorrect());
+					option.setText(null);
 					option.setQuestion(question);
-					toSaveOptions.add(option);
-				}		
-				
-				question.setOptions(toSaveOptions);
+					option.setCorrect(false);
+					saveOptionsNull.add(option);
+				} else {
+					List<OptionsDto> optionDto = questionDto.getOptions();
+					List<Option> toSaveOptions = new ArrayList<>();
+					for(OptionsDto dtoOption : optionDto )	{
+						Option option = new Option();
+						option.setText(dtoOption.getOptionName());
+						option.setCorrect(dtoOption.isCorrect());
+						option.setQuestion(question);
+						toSaveOptions.add(option);
+					}		
+					question.setOptions(toSaveOptions);
+				}
 				questionRepo.save(question);
 				return ResponseEntity.status(HttpStatus.CREATED).body(questionDto);
 			} else {
@@ -132,13 +140,21 @@ public class QuestionController {
 			responseDto.setYear(question.getYear());			
 			responseDto.setQuestion(question.getQuestionText());
 			responseDto.setOptionType(question.getOptionT().getId());
-			
 			List<OptionDto> optionDto = new ArrayList<>();
-			for(Option option: question.getOptions()) {
+			if(question.getOptionT().getId()==3) {
+				
 				OptionDto optDto = new OptionDto();
-				optDto.setOption(option.getText());
-				optDto.setCheck(option.isCorrect());
+				optDto.setOption(null);
+				optDto.setCheck(false);
 				optionDto.add(optDto);
+			}
+			else {
+				for(Option option: question.getOptions()) {
+					OptionDto optDto = new OptionDto();
+					optDto.setOption(option.getText());
+					optDto.setCheck(option.isCorrect());
+					optionDto.add(optDto);
+				}
 			}
 			responseDto.setOptionResponse(optionDto);
 			
@@ -170,11 +186,19 @@ public class QuestionController {
 			editQuestionDto.setOptionType(optionTypeId);
 			
 			List<EditOptionDto> listForEdit = new ArrayList<>();
-			for(Option option: question.get().getOptions()) {
-				EditOptionDto editOptionDto = new EditOptionDto();
-				editOptionDto.setOption(option.getText());
-				editOptionDto.setCheck(option.isCorrect());
-				listForEdit.add(editOptionDto);
+			if(question.get().getOptionT().getId()==3) {
+				
+				EditOptionDto optDto = new EditOptionDto();
+				optDto.setOption(null);
+				optDto.setCheck(false);
+				listForEdit.add(optDto);
+			} else {
+				for(Option option: question.get().getOptions()) {
+					EditOptionDto editOptionDto = new EditOptionDto();
+					editOptionDto.setOption(option.getText());
+					editOptionDto.setCheck(option.isCorrect());
+					listForEdit.add(editOptionDto);
+				}
 			}
 			editQuestionDto.setOption(listForEdit);
 			return ResponseEntity.ok().body(editQuestionDto);
@@ -215,17 +239,24 @@ public class QuestionController {
 				
 				List<EditOptionDto> editOptionDtoList = editQuestionDto.getOption();
 				
-				
-				for (int i= 0; i < Math.min(optionList.size(), editOptionDtoList.size()); i++ ) {
-					Option existingOption = optionList.get(i);
-					EditOptionDto editOptionDto = editOptionDtoList.get(i);
-					
-					existingOption.setText(editOptionDto.getOption());
-					existingOption.setCorrect(editOptionDto.isCheck());
-					optionRepo.save(existingOption);
-					
-					
-				}
+				if(opt.getId() == 3) {
+					question.getOptions().clear();
+					Option option = new Option();
+					option.setText(null);
+					option.setQuestion(question);
+					option.setCorrect(false);
+				} else {
+					for (int i= 0; i < Math.min(optionList.size(), editOptionDtoList.size()); i++ ) {
+						Option existingOption = optionList.get(i);
+						EditOptionDto editOptionDto = editOptionDtoList.get(i);
+						
+						existingOption.setText(editOptionDto.getOption());
+						existingOption.setCorrect(editOptionDto.isCheck());
+						optionRepo.save(existingOption);
+						
+						
+					}
+					}
 				questionRepo.save(question);
 				return ResponseEntity.ok().body(editQuestionDto);
 			} else {
