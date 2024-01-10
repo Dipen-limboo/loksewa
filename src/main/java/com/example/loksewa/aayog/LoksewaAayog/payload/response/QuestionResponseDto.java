@@ -4,6 +4,8 @@ public class QuestionResponseDto {
 	private String question;
 	
 	private String option;
+	
+	private String correctOption;
 
 	public QuestionResponseDto() {
 		super();
@@ -30,6 +32,14 @@ public class QuestionResponseDto {
 
 	public void setOption(String option) {
 		this.option = option;
+	}
+
+	public String getCorrectOption() {
+		return correctOption;
+	}
+
+	public void setCorrectOption(String correctOption) {
+		this.correctOption = correctOption;
 	}
 	
 	

@@ -13,4 +13,5 @@ public interface OptionRepo extends JpaRepository<Option, Long> {
 	Optional<Option> findById(Long optionsId);
 
 	int countByIdAndIsCorrect(long optionId, boolean check);
+	Optional<Option> findByQuestionAndId(Question question, Long questionId);
 }

@@ -148,55 +148,86 @@ public class AnswerController {
 				userScore.setUser(user);
 				userScore.setDate(new Date());
 				userScoreRepo.save(userScore);
-				
-				List<AnswerDto> answerDtoList = answerSetDto.getAnswer();
+				List<Question> listQuestion = questionSet.getQuestion();
 				List<ScoreBoard> scoreBoardList = new ArrayList<>();
 				
-				for(AnswerDto answerDto: answerDtoList ) {
+				for(Question question: listQuestion) {
 					ScoreBoard score = new ScoreBoard();
-					Long questionId = answerDto.getQuestionId();
-					Optional<Question> optionalQuestion = questionRepo.findById(questionId);
-					if(optionalQuestion.isPresent()) {
-						Question question = optionalQuestion.get();
-						score.setQuestion(question);
-						
-						Long optionId = answerDto.getOptionId();
-						Optional<Option> optionalOption = optionRepo.findById(optionId);
-						if(optionalOption.isPresent()) {
-							Option option = optionalOption.get();
-							score.setOption(option);
-							score.setBoard(userScore);
-							rights += optionRepo.countByIdAndIsCorrect(optionId, check);
-						} else {
-							return ResponseEntity.badRequest().body(new MessageResponse("Error: Option not found by option id: "+ optionId));
+					score.setQuestion(question);
+					List<AnswerDto> answerList = answerSetDto.getAnswer();
+					for(AnswerDto answer: answerList) {
+						if(question.getId().equals(answer.getQuestionId())) {
+							Optional<Option> optionalOption = optionRepo.findByQuestionAndId(question, answer.getOptionId());
+							if(optionalOption.isPresent()) {
+								score.setOption(optionalOption.get());
+								
+								rights += optionRepo.countByIdAndIsCorrect(answer.getOptionId(), check);
+							} else {
+								score.setOption(null);
+							}
 						}
-					} else {
-						return ResponseEntity.badRequest().body(new MessageResponse("Error: Question not found by question id: "+ questionId));
+						score.setBoard(userScore);
 					}
 					scoreBoardList.add(score);
 				}
+				
+				
+				
+				
+//				List<AnswerDto> answerDtoList = answerSetDto.getAnswer();
+//				List<ScoreBoard> scoreBoardList = new ArrayList<>();
+//				
+//				for(AnswerDto answerDto: answerDtoList ) {
+//					ScoreBoard score = new ScoreBoard();
+//					Long questionId = answerDto.getQuestionId();
+//					Optional<Question> optionalQuestion = questionRepo.findById(questionId);
+//					if(optionalQuestion.isPresent()) {
+//						Question question = optionalQuestion.get();
+//						score.setQuestion(question);
+//						
+//						Long optionId = answerDto.getOptionId();
+//						Optional<Option> optionalOption = optionRepo.findById(optionId);
+//						if(optionalOption.isPresent()) {
+//							Option option = optionalOption.get();
+//							score.setOption(option);
+//							score.setBoard(userScore);
+//							rights += optionRepo.countByIdAndIsCorrect(optionId, check);
+//						} else {
+//							return ResponseEntity.badRequest().body(new MessageResponse("Error: Option not found by option id: "+ optionId));
+//						}
+//					} else {
+//						return ResponseEntity.badRequest().body(new MessageResponse("Error: Question not found by question id: "+ questionId));
+//					}
+//					scoreBoardList.add(score);
+//				}
 				boardRepo.saveAll(scoreBoardList);
 				taskScheduler.initialize();
+				
+				
 				ScoreResponseDto score = new ScoreResponseDto();
-				List<AnswerDto> answerdtoList = answerSetDto.getAnswer();
-				List<QuestionResponseDto> responseDtoList = new ArrayList();
-				for(AnswerDto answer: answerdtoList) {
-					QuestionResponseDto questionResponse =  new QuestionResponseDto();
-					Long questionId = answer.getQuestionId();
-					Optional<Question> optionalQuestion = questionRepo.findById(questionId);
-					if(optionalQuestion.isPresent()) {
-						Question question = optionalQuestion.get();
-						questionResponse.setQuestion(question.getQuestionText());
+				List<QuestionResponseDto> responseDtoList = new ArrayList<>();
+				for(Question question: listQuestion) {
+					QuestionResponseDto questionResponse = new QuestionResponseDto();
+					questionResponse.setQuestion(question.getQuestionText());
+					List<AnswerDto> answerList = answerSetDto.getAnswer();
+					for(AnswerDto answer: answerList) {
+						if(question.getId().equals(answer.getQuestionId())) {
+							Optional<Option> optionalOption = optionRepo.findByQuestionAndId(question, answer.getOptionId());
+							if(optionalOption.isPresent()) {
+								questionResponse.setOption(optionalOption.get().getText());
+							} else {
+								questionResponse.setOption(null);
+							}
+						}
+						List<Option> optionsList= optionRepo.findByQuestion(question);
+						boolean optionCheck = true;
+						for (Option option: optionsList) {
+							if(option.isCorrect() == optionCheck) {
+								questionResponse.setCorrectOption(option.getText());
+							}
+						}
 					}
-					Long optionId = answer.getOptionId();
-					Optional<Option> optionalOption= optionRepo.findById(optionId);
-					if(optionalOption.isPresent()) {
-						Option option= optionalOption.get();
-						questionResponse.setOption(option.getText());
-					} else {
-						System.out.println("______________________________"+optionId);
-					}
-					responseDtoList.add(questionResponse);
+					responseDtoList.add(questionResponse); 
 				}
 				score.setListResponseDto(responseDtoList);
 				score.setRight(rights);
