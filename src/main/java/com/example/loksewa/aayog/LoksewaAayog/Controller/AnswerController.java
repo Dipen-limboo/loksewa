@@ -269,4 +269,47 @@ public class AnswerController {
 			return ResponseEntity.badRequest().body(new MessageResponse("Error: User is not found by user id:" + id));
 		}
 	}
+	
+	@GetMapping("/getanswer/exam={id}")
+	@PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+	public ResponseEntity<?> getAnswersByExamsId(@PathVariable Long id){
+		Optional<UserScore> optionalUserScore = userScoreRepo.findById(id);
+		if(optionalUserScore.isPresent()) {
+			UserScore score = optionalUserScore.get();
+			ListOfAnswerAttemptDto attemptDto = new ListOfAnswerAttemptDto();
+			attemptDto.setId(score.getId());
+			attemptDto.setDate(score.getDate());
+			
+			List<ScoreBoard> scoreBoardList = boardRepo.findByTest(score);
+			List<GetListOfquestionSetDto> list = new ArrayList<>();
+			if(!scoreBoardList.isEmpty()) {
+				for (ScoreBoard board: scoreBoardList) {
+					GetListOfquestionSetDto answers = new GetListOfquestionSetDto();
+					answers.setQuestion(board.getQuestion().getQuestionText());
+					if(board.getOption() == null) {
+						answers.setOption(null);
+					} else {
+						answers.setOption(board.getOption().getText());
+					}
+					List<Option> optionsList= optionRepo.findByQuestion(board.getQuestion());
+					boolean optionCheck = true;
+					for (Option option: optionsList) {
+						if(option.isCorrect() == optionCheck) {
+							answers.setCorrectOption(option.getText());
+						}
+					}
+					list.add(answers);
+				}
+			} else {
+				return ResponseEntity.badRequest().body(new MessageResponse("Error: exam is not found by id:"+ score.getId()));
+			}
+			attemptDto.setListOfAnswer(list);
+			return ResponseEntity.ok().body(attemptDto);
+		} else {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error: Exam is not found by exam id:" + id));
+
+		}
+		
+		
+	}
 }
