@@ -1,42 +1,44 @@
 package com.example.loksewa.aayog.LoksewaAayog.Entity;
 
-import java.util.List;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name="score_boards")
+@Table(name="test_answers")
 public class ScoreBoard {
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long id;
 	
-	@Column(name="total_attempt")
-	private int total;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="question_id")
+	private Question question;
 	
-	@Column(name="correct_answers")
-	private int right;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="option_id")
+	private Option option;
 	
-	@OneToMany(mappedBy="board", cascade = CascadeType.ALL)
-	private List<UserScore> score;
-	
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="exams_id")
+	private UserScore test;
+
 	public ScoreBoard() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public ScoreBoard(Long id, int total, int right) {
+	public ScoreBoard(Long id, Question question, Option option, UserScore board) {
 		super();
 		this.id = id;
-		this.total = total;
-		this.right = right;
+		this.question = question;
+		this.option = option;
+		this.test = board;
 	}
 
 	public Long getId() {
@@ -47,20 +49,28 @@ public class ScoreBoard {
 		this.id = id;
 	}
 
-	public int getTotal() {
-		return total;
+	public Question getQuestion() {
+		return question;
 	}
 
-	public void setTotal(int total) {
-		this.total = total;
+	public void setQuestion(Question question) {
+		this.question = question;
 	}
 
-	public int getRight() {
-		return right;
+	public Option getOption() {
+		return option;
 	}
 
-	public void setRight(int right) {
-		this.right = right;
+	public void setOption(Option option) {
+		this.option = option;
 	}
 
+	public UserScore getBoard() {
+		return test;
+	}
+
+	public void setBoard(UserScore board) {
+		this.test = board;
+	}
+	
 }

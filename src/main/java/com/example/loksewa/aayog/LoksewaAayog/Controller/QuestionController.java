@@ -251,28 +251,4 @@ public class QuestionController {
 	}
 
 }
-//	@PostMapping("/answer")
-//	@PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
-//	public ResponseEntity<?> evaluate(@RequestBody List<Answer> answers) {
-//		UserScore userScore = new UserScore(); 
-//		int rights = 0;
-//		for (Answer answer : answers) 
-//			rights +=  questionRepo.countByIdAndAnswer(answer.getId(), answer.getOption());
-//		Score score = new Score(answers.size(), rights);
-//		
-//		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-//		
-//		UserDetailsImpl userDetails =(UserDetailsImpl) auth.getPrincipal();
-//		
-//		String username = userDetails.getUsername();
-//		User currentUser = userRepo.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found by " + username));
-//		
-//		userScore.setRight(rights);
-//		userScore.setTotal(answers.size());
-//		
-//		currentUser.getScores().add(userScore);
-//		scoreRepo.save(userScore);
-//		return ResponseEntity.status(HttpStatus.CREATED).body(score);
-//	}
-//	 
-//}
+

@@ -1,12 +1,15 @@
 package com.example.loksewa.aayog.LoksewaAayog.Controller;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,6 +40,7 @@ import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.AnswerSetDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.DisplayOptionDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.DisplayQuestionSetDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.MessageResponse;
+import com.example.loksewa.aayog.LoksewaAayog.payload.response.QuestionResponseDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.QuestionSetDisplayDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.ScoreResponseDto;
 import com.example.loksewa.aayog.LoksewaAayog.security.service.UserDetailsImpl;
@@ -70,6 +74,8 @@ public class AnswerController {
 	
 	@Autowired
 	UserRepository userRepo;
+	
+	private final ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
 	
 	@GetMapping("/getQuestionSet/{category_id}/{position_id}")
 	@PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
@@ -129,61 +135,112 @@ public class AnswerController {
 	@Transactional
 	public ResponseEntity<?> answeringQuestionSet(@PathVariable Long id, @RequestBody AnswerSetDto answerSetDto, Authentication auth){
 		Optional<QuestionSet> optionalQuestionSet = questionSetRepo.findById(id);
-		boolean check = true;
-		ScoreResponseDto score = new ScoreResponseDto(); 
 		if(optionalQuestionSet.isPresent()) {
 			QuestionSet questionSet = optionalQuestionSet.get();
-			List<AnswerDto> answerSetDtoList = answerSetDto.getAnswer();
-			List<UserScore> userScoreList = new ArrayList<>();
-			int rights = 0; 
-			for(AnswerDto answer: answerSetDtoList) {
+			UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
+			Long userId = userDetails.getId();
+			Optional<User> userOptional = userRepo.findById(userId);
+			int rights = 0;
+			boolean check = true;
+			if(userOptional.isPresent()) {
+				User user = userOptional.get();
 				UserScore userScore = new UserScore();
+				userScore.setUser(user);
+				userScore.setDate(new Date());
+				userScoreRepo.save(userScore);
 				
-				UserDetailsImpl userDetailsImpl = (UserDetailsImpl) auth.getPrincipal();
+				List<AnswerDto> answerDtoList = answerSetDto.getAnswer();
+				List<ScoreBoard> scoreBoardList = new ArrayList<>();
 				
-				
-				long questionId = answer.getQuestionId();
-				Optional<Question> question = questionRepo.findById(questionId);
-				if(question.isPresent()) {
-					userScore.setQuestion(question.get());
-					
-					
-					long optionId = answer.getOptionId();
-					Optional<Option> option = optionRepo.findById(optionId);
-					if(option.isPresent()) {
-						userScore.setOption(option.get());
+				for(AnswerDto answerDto: answerDtoList ) {
+					ScoreBoard score = new ScoreBoard();
+					Long questionId = answerDto.getQuestionId();
+					Optional<Question> optionalQuestion = questionRepo.findById(questionId);
+					if(optionalQuestion.isPresent()) {
+						Question question = optionalQuestion.get();
+						score.setQuestion(question);
 						
-						Long userId = userDetailsImpl.getId();
-						Optional<User> user = userRepo.findById(userId);
-						if(user.isPresent()) {
-							userScore.setUser(user.get());
-							
+						Long optionId = answerDto.getOptionId();
+						Optional<Option> optionalOption = optionRepo.findById(optionId);
+						if(optionalOption.isPresent()) {
+							Option option = optionalOption.get();
+							score.setOption(option);
+							score.setBoard(userScore);
+							rights += optionRepo.countByIdAndIsCorrect(optionId, check);
 						} else {
-							return ResponseEntity.badRequest().body(new MessageResponse("Error: User not found "));
+							return ResponseEntity.badRequest().body(new MessageResponse("Error: Option not found by option id: "+ optionId));
 						}
-						rights += optionRepo.countByIdAndIsCorrect(optionId, check);
-						
 					} else {
-						return ResponseEntity.badRequest().body(new MessageResponse("Error: Option is not found by option id " + optionId));
+						return ResponseEntity.badRequest().body(new MessageResponse("Error: Question not found by question id: "+ questionId));
 					}
-				} else {
-					return ResponseEntity.badRequest().body(new MessageResponse("Error: question is not found by question id " + questionId));
+					scoreBoardList.add(score);
 				}
-				userScoreList.add(userScore);
-			}
-			
-			ScoreBoard board = new ScoreBoard();
-			board.setRight(rights);
-			board.setTotal(answerSetDtoList.size());
-			boardRepo.save(board);
-			for (UserScore userScore : userScoreList) {
-			    userScore.setBoard(board);
-			}
-
-			userScoreRepo.saveAll(userScoreList);
-			score  = new ScoreResponseDto(answerSetDtoList.size(), rights);
+				boardRepo.saveAll(scoreBoardList);
+				taskScheduler.initialize();
+				ScoreResponseDto score = new ScoreResponseDto();
+				List<AnswerDto> answerdtoList = answerSetDto.getAnswer();
+				List<QuestionResponseDto> responseDtoList = new ArrayList();
+				for(AnswerDto answer: answerdtoList) {
+					QuestionResponseDto questionResponse =  new QuestionResponseDto();
+					Long questionId = answer.getQuestionId();
+					Optional<Question> optionalQuestion = questionRepo.findById(questionId);
+					if(optionalQuestion.isPresent()) {
+						Question question = optionalQuestion.get();
+						questionResponse.setQuestion(question.getQuestionText());
+					}
+					Long optionId = answer.getOptionId();
+					Optional<Option> optionalOption= optionRepo.findById(optionId);
+					if(optionalOption.isPresent()) {
+						Option option= optionalOption.get();
+						questionResponse.setOption(option.getText());
+					} else {
+						System.out.println("______________________________"+optionId);
+					}
+					responseDtoList.add(questionResponse);
+				}
+				score.setListResponseDto(responseDtoList);
+				score.setRight(rights);
+				score.setTotal(questionSet.getQuestion().size());
+				return ResponseEntity.ok().body(score); 
+			} else {
+				return ResponseEntity.badRequest().body(new MessageResponse("Error: user not found by userId: "+ userId));
+			} 
+		} else {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error: Question Set not found by set id : "+ id));
 		}
 		
-		return ResponseEntity.ok().body(score); 
+//		taskScheduler.initialize();
+//		return ResponseEntity.ok().body(score); 
 	}
+	
+	
+	@Scheduled(fixedDelay=300000)
+	public void timeoutTask() {
+		taskScheduler.shutdown();
+	}
+	
+//	@GetMapping("/getanswer/{id}")
+//	@PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+//	public ResponseEntity<?> listofAnswerByUser(@PathVariable Long id){
+//		Optional<User> optionalUser = userRepo.findById(id);
+//		if(optionalUser.isPresent()) {
+//			User user = optionalUser.get();
+//			List<UserScore> userScoreList = userScoreRepo.findByUser(user);
+//			List<ListOfAnswerAttemptDto> listOfAnswerAttemptDto = new ArrayList<>();
+//			
+//			if(!userScoreList.isEmpty()) {
+//				for(UserScore score: userScoreList ) {
+//					ListOfAnswerAttemptDto attemptDto = new ListOfAnswerAttemptDto();
+//					attemptDto.setId(score.getBoard().getId());
+//					attemptDto.setDate(score.getDate());
+//					
+//				}
+//			}
+//			
+//			return null;
+//
+//		} else {
+//			return ResponseEntity.badRequest().body(new MessageResponse("Error: User is not found by user id:" + id));
+//		}
+//	}
 }
