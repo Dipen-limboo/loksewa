@@ -39,6 +39,8 @@ import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.AnswerDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.AnswerSetDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.DisplayOptionDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.DisplayQuestionSetDto;
+import com.example.loksewa.aayog.LoksewaAayog.payload.response.GetListOfquestionSetDto;
+import com.example.loksewa.aayog.LoksewaAayog.payload.response.ListOfAnswerAttemptDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.MessageResponse;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.QuestionResponseDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.QuestionSetDisplayDto;
@@ -170,36 +172,6 @@ public class AnswerController {
 					}
 					scoreBoardList.add(score);
 				}
-				
-				
-				
-				
-//				List<AnswerDto> answerDtoList = answerSetDto.getAnswer();
-//				List<ScoreBoard> scoreBoardList = new ArrayList<>();
-//				
-//				for(AnswerDto answerDto: answerDtoList ) {
-//					ScoreBoard score = new ScoreBoard();
-//					Long questionId = answerDto.getQuestionId();
-//					Optional<Question> optionalQuestion = questionRepo.findById(questionId);
-//					if(optionalQuestion.isPresent()) {
-//						Question question = optionalQuestion.get();
-//						score.setQuestion(question);
-//						
-//						Long optionId = answerDto.getOptionId();
-//						Optional<Option> optionalOption = optionRepo.findById(optionId);
-//						if(optionalOption.isPresent()) {
-//							Option option = optionalOption.get();
-//							score.setOption(option);
-//							score.setBoard(userScore);
-//							rights += optionRepo.countByIdAndIsCorrect(optionId, check);
-//						} else {
-//							return ResponseEntity.badRequest().body(new MessageResponse("Error: Option not found by option id: "+ optionId));
-//						}
-//					} else {
-//						return ResponseEntity.badRequest().body(new MessageResponse("Error: Question not found by question id: "+ questionId));
-//					}
-//					scoreBoardList.add(score);
-//				}
 				boardRepo.saveAll(scoreBoardList);
 				taskScheduler.initialize();
 				
@@ -239,9 +211,6 @@ public class AnswerController {
 		} else {
 			return ResponseEntity.badRequest().body(new MessageResponse("Error: Question Set not found by set id : "+ id));
 		}
-		
-//		taskScheduler.initialize();
-//		return ResponseEntity.ok().body(score); 
 	}
 	
 	
@@ -250,28 +219,54 @@ public class AnswerController {
 		taskScheduler.shutdown();
 	}
 	
-//	@GetMapping("/getanswer/{id}")
-//	@PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
-//	public ResponseEntity<?> listofAnswerByUser(@PathVariable Long id){
-//		Optional<User> optionalUser = userRepo.findById(id);
-//		if(optionalUser.isPresent()) {
-//			User user = optionalUser.get();
-//			List<UserScore> userScoreList = userScoreRepo.findByUser(user);
-//			List<ListOfAnswerAttemptDto> listOfAnswerAttemptDto = new ArrayList<>();
-//			
-//			if(!userScoreList.isEmpty()) {
-//				for(UserScore score: userScoreList ) {
-//					ListOfAnswerAttemptDto attemptDto = new ListOfAnswerAttemptDto();
-//					attemptDto.setId(score.getBoard().getId());
-//					attemptDto.setDate(score.getDate());
-//					
-//				}
-//			}
-//			
-//			return null;
-//
-//		} else {
-//			return ResponseEntity.badRequest().body(new MessageResponse("Error: User is not found by user id:" + id));
-//		}
-//	}
+	@GetMapping("/getanswer/{id}")
+	@PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+	public ResponseEntity<?> listofAnswerByUser(@PathVariable Long id){
+		Optional<User> optionalUser = userRepo.findById(id);
+		if(optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			List<UserScore> userScoreList = userScoreRepo.findByUser(user);
+			List<ListOfAnswerAttemptDto> listOfAnswerAttemptDto = new ArrayList<>();
+			
+			if(!userScoreList.isEmpty()) {
+				for(UserScore score: userScoreList ) {
+					ListOfAnswerAttemptDto attemptDto = new ListOfAnswerAttemptDto();
+					attemptDto.setId(score.getId());
+					attemptDto.setDate(score.getDate());
+					
+					List<ScoreBoard> scoreBoardList = boardRepo.findByTest(score);
+					List<GetListOfquestionSetDto> list = new ArrayList<>();
+					if(!scoreBoardList.isEmpty()) {
+						for (ScoreBoard board: scoreBoardList) {
+							GetListOfquestionSetDto answers = new GetListOfquestionSetDto();
+							answers.setQuestion(board.getQuestion().getQuestionText());
+							if(board.getOption() == null) {
+								answers.setOption(null);
+							} else {
+								answers.setOption(board.getOption().getText());
+							}
+							List<Option> optionsList= optionRepo.findByQuestion(board.getQuestion());
+							boolean optionCheck = true;
+							for (Option option: optionsList) {
+								if(option.isCorrect() == optionCheck) {
+									answers.setCorrectOption(option.getText());
+								}
+							}
+							list.add(answers);
+						}
+					} else {
+						return ResponseEntity.badRequest().body(new MessageResponse("Error: exam is not found by id:"+ score.getId()));
+					}
+					attemptDto.setListOfAnswer(list);
+					listOfAnswerAttemptDto.add(attemptDto);
+				}
+			} else {
+				return ResponseEntity.badRequest().body(new MessageResponse("Error: User not found by id: " + user.getId()));
+			}
+			return ResponseEntity.ok().body(listOfAnswerAttemptDto);
+
+		} else {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error: User is not found by user id:" + id));
+		}
+	}
 }

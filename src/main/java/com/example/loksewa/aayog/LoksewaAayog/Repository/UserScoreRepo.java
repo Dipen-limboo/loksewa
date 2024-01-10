@@ -11,4 +11,7 @@ import com.example.loksewa.aayog.LoksewaAayog.Entity.UserScore;
 
 public interface UserScoreRepo extends JpaRepository<UserScore, Long>{
 
+	
+	List<UserScore> findByUser(User user);
+
 }

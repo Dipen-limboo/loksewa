@@ -21,7 +21,7 @@ public class ScoreBoard {
 	private Question question;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name="option_id")
+	@JoinColumn(name="option_id",  nullable=true)
 	private Option option;
 	
 	@ManyToOne(fetch=FetchType.LAZY)

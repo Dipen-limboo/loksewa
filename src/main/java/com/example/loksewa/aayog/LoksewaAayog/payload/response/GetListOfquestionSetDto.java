@@ -3,16 +3,16 @@ package com.example.loksewa.aayog.LoksewaAayog.payload.response;
 public class GetListOfquestionSetDto {
 	private String question;
 	
-	private Long option;
+	private String option;
 	
-	private Long correctOption;
+	private String correctOption;
 
 	public GetListOfquestionSetDto() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public GetListOfquestionSetDto(String question, Long option, Long correctOption) {
+	public GetListOfquestionSetDto(String question, String option, String correctOption) {
 		super();
 		this.question = question;
 		this.option = option;
@@ -27,19 +27,19 @@ public class GetListOfquestionSetDto {
 		this.question = question;
 	}
 
-	public Long getOption() {
+	public String getOption() {
 		return option;
 	}
 
-	public void setOption(Long option) {
+	public void setOption(String option) {
 		this.option = option;
 	}
 
-	public Long getCorrectOption() {
+	public String getCorrectOption() {
 		return correctOption;
 	}
 
-	public void setCorrectOption(Long correctOption) {
+	public void setCorrectOption(String correctOption) {
 		this.correctOption = correctOption;
 	}
 	
