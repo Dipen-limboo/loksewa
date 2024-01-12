@@ -82,7 +82,11 @@
 		  <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 		  <version>2.1.0</version>
 		</dependency>
-
+		<dependency>
+		  <groupId>io.smallrye</groupId>
+		  <artifactId>smallrye-fault-tolerance</artifactId>
+		  <version>6.2.0</version>
+		</dependency>   
 	</dependencies>
 
 	<build>

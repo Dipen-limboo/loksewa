@@ -28,17 +28,22 @@ public class UserScore {
 	@Column(name="test_date")
 	@JsonFormat(pattern="yyyy-MM-dd")
 	private Date date;
+	
+	@Column(name="expiry-date")
+	@JsonFormat(pattern="yyyy-MM-dd")
+	private Date expiry;
 
 	public UserScore() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public UserScore(Long id, User user, Date date) {
+	public UserScore(Long id, User user, Date date, Date expiry) {
 		super();
 		this.id = id;
 		this.user = user;
 		this.date = date;
+		this.expiry = expiry;
 	}
 
 	public Long getId() {
@@ -63,6 +68,14 @@ public class UserScore {
 
 	public void setDate(Date date) {
 		this.date = date;
+	}
+
+	public Date getExpiry() {
+		return expiry;
+	}
+
+	public void setExpiry(Date expiry) {
+		this.expiry = expiry;
 	}
 	
 	

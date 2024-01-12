@@ -1,10 +1,8 @@
 package com.example.loksewa.aayog.LoksewaAayog.Configuration;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -16,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.example.loksewa.aayog.LoksewaAayog.Controller.AnswerController;
 import com.example.loksewa.aayog.LoksewaAayog.security.jwt.AuthEntryPointJwt;
 import com.example.loksewa.aayog.LoksewaAayog.security.jwt.AuthTokenFilter;
 import com.example.loksewa.aayog.LoksewaAayog.security.service.UserDetailsServiceImpl;
@@ -34,6 +33,9 @@ public class WebSecurityConfig {
 
   @Autowired
   private AuthEntryPointJwt unauthorizedHandler;
+
+  @Autowired
+  private AnswerController quizController;
 
   @Bean
   public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -83,4 +85,6 @@ public class WebSecurityConfig {
     
     return http.build();
   }
+  
+
 }

@@ -78,6 +78,7 @@ public class AnswerController {
 	UserRepository userRepo;
 	
 	private final ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
+	private static final long EXPIRATION_TIME_MS = 1 * 60 * 1000;
 	
 	@GetMapping("/getQuestionSet/{category_id}/{position_id}")
 	@PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
@@ -148,33 +149,71 @@ public class AnswerController {
 				User user = userOptional.get();
 				UserScore userScore = new UserScore();
 				userScore.setUser(user);
-				userScore.setDate(new Date());
+				Date newDate = new Date();
+				userScore.setDate(newDate);
+				Date expiryDate = new Date(newDate.getTime()+EXPIRATION_TIME_MS);
+				userScore.setExpiry(expiryDate);
 				userScoreRepo.save(userScore);
-				List<Question> listQuestion = questionSet.getQuestion();
-				List<ScoreBoard> scoreBoardList = new ArrayList<>();
 				
+				
+				
+				List<Question> listQuestion = questionSet.getQuestion();
+				
+				String message = "Your answers";
+
 				for(Question question: listQuestion) {
-					ScoreBoard score = new ScoreBoard();
-					score.setQuestion(question);
+					ScoreBoard scoreboard = new ScoreBoard();
+					scoreboard.setBoard(userScore);
+					scoreboard.setQuestion(question);
 					List<AnswerDto> answerList = answerSetDto.getAnswer();
-					for(AnswerDto answer: answerList) {
+					for(AnswerDto answer: answerList ) {
 						if(question.getId().equals(answer.getQuestionId())) {
 							Optional<Option> optionalOption = optionRepo.findByQuestionAndId(question, answer.getOptionId());
-							if(optionalOption.isPresent()) {
-								score.setOption(optionalOption.get());
-								
+							if(optionalOption.isPresent() && (new Date().before(expiryDate))) {
+								Optional<ScoreBoard> optionalScoreboard = boardRepo.findByTestAndQuestion(userScore, question);
+								if(optionalScoreboard.isPresent()) {
+									scoreboard.setOption(optionalOption.get()); 
+								} else {
+									scoreboard.setOption(optionalOption.get());
+								}
 								rights += optionRepo.countByIdAndIsCorrect(answer.getOptionId(), check);
+
+							} else if(optionalOption.isPresent() && (new Date().after(expiryDate))){
+								message="Your time is up";
+								scoreboard.setOption(null);
 							} else {
-								score.setOption(null);
+								scoreboard.setOption(null);
 							}
 						}
-						score.setBoard(userScore);
-					}
-					scoreBoardList.add(score);
+						boardRepo.save(scoreboard);
+						}
 				}
-				boardRepo.saveAll(scoreBoardList);
-				taskScheduler.initialize();
 				
+//				for(Question question: listQuestion) {
+//					ScoreBoard score = new ScoreBoard();
+//					score.setQuestion(question);
+//					score.setBoard(userScore);
+//					List<AnswerDto> answerList = answerSetDto.getAnswer();
+//					for(AnswerDto answer: answerList) {
+//						if((new Date()).before(expiryDate)) {
+//							if(question.getId().equals(answer.getQuestionId())) {
+//								Optional<Option> optionalOption = optionRepo.findByQuestionAndId(question, answer.getOptionId());
+//								if(optionalOption.isPresent()) {
+//									score.setOption(optionalOption.get());
+//									
+//									rights += optionRepo.countByIdAndIsCorrect(answer.getOptionId(), check);
+//								} else {
+//									score.setOption(null);
+//								}
+//							}
+//						} else {
+//							message = "Timeout"; 
+//						}
+//					}
+//					scoreBoardList.add(score);
+//				}
+//				boardRepo.saveAll(scoreBoardList);
+//				
 				
 				ScoreResponseDto score = new ScoreResponseDto();
 				List<QuestionResponseDto> responseDtoList = new ArrayList<>();
@@ -204,6 +243,7 @@ public class AnswerController {
 				score.setListResponseDto(responseDtoList);
 				score.setRight(rights);
 				score.setTotal(questionSet.getQuestion().size());
+				score.setMessage(message);
 				return ResponseEntity.ok().body(score); 
 			} else {
 				return ResponseEntity.badRequest().body(new MessageResponse("Error: user not found by userId: "+ userId));
@@ -214,10 +254,6 @@ public class AnswerController {
 	}
 	
 	
-	@Scheduled(fixedDelay=300000)
-	public void timeoutTask() {
-		taskScheduler.shutdown();
-	}
 	
 	@GetMapping("/getanswer/{id}")
 	@PreAuthorize("hasRole('ADMIN') or hasRole('USER')")

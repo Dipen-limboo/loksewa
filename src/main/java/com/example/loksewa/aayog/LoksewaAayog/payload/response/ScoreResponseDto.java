@@ -4,6 +4,7 @@ import java.util.List;
 
 public class ScoreResponseDto {
 	
+	private String Message;
 	private List<QuestionResponseDto> Questions;
 	private int total;
 	private int right;
@@ -35,6 +36,13 @@ public class ScoreResponseDto {
 	public void setRight(int right) {
 		this.right = right;
 	}
+	public String getMessage() {
+		return Message;
+	}
+	public void setMessage(String message) {
+		Message = message;
+	}
+	
 
 	
 }
