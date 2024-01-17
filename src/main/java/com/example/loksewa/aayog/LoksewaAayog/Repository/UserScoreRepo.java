@@ -14,4 +14,6 @@ public interface UserScoreRepo extends JpaRepository<UserScore, Long>{
 	
 	List<UserScore> findByUser(User user);
 
+	int countById(Long id);
+
 }

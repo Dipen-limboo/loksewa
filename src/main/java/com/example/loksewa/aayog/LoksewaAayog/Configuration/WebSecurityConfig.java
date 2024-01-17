@@ -24,6 +24,7 @@ import com.example.loksewa.aayog.LoksewaAayog.security.service.UserDetailsServic
 //(securedEnabled = true,
 //jsr250Enabled = true,
 //prePostEnabled = true) // by default
+
 public class WebSecurityConfig {
   
 

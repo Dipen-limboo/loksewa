@@ -8,7 +8,6 @@ import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -37,6 +36,7 @@ import com.example.loksewa.aayog.LoksewaAayog.Repository.UserRepository;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.UserScoreRepo;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.AnswerDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.AnswerSetDto;
+import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.DashBoardDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.DisplayOptionDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.DisplayQuestionSetDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.GetListOfquestionSetDto;
@@ -188,32 +188,7 @@ public class AnswerController {
 						boardRepo.save(scoreboard);
 						}
 				}
-				
-//				for(Question question: listQuestion) {
-//					ScoreBoard score = new ScoreBoard();
-//					score.setQuestion(question);
-//					score.setBoard(userScore);
-//					List<AnswerDto> answerList = answerSetDto.getAnswer();
-//					for(AnswerDto answer: answerList) {
-//						if((new Date()).before(expiryDate)) {
-//							if(question.getId().equals(answer.getQuestionId())) {
-//								Optional<Option> optionalOption = optionRepo.findByQuestionAndId(question, answer.getOptionId());
-//								if(optionalOption.isPresent()) {
-//									score.setOption(optionalOption.get());
-//									
-//									rights += optionRepo.countByIdAndIsCorrect(answer.getOptionId(), check);
-//								} else {
-//									score.setOption(null);
-//								}
-//							}
-//						} else {
-//							message = "Timeout"; 
-//						}
-//					}
-//					scoreBoardList.add(score);
-//				}
-//				boardRepo.saveAll(scoreBoardList);
-//				
+		
 				
 				ScoreResponseDto score = new ScoreResponseDto();
 				List<QuestionResponseDto> responseDtoList = new ArrayList<>();
@@ -253,7 +228,44 @@ public class AnswerController {
 		}
 	}
 	
-	
+	@GetMapping("/getanswerList")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<?> listofAnswers(){
+		List<UserScore> userscorelist = userScoreRepo.findAll();
+		List<ListOfAnswerAttemptDto> listOfAnswerAttemptDto = new ArrayList<>();
+		for (UserScore score: userscorelist) {
+			ListOfAnswerAttemptDto attemptDto = new ListOfAnswerAttemptDto();
+			attemptDto.setId(score.getId());
+			attemptDto.setDate(score.getDate());
+		
+			List<ScoreBoard> scoreBoardList = boardRepo.findByTest(score);
+			List<GetListOfquestionSetDto> list = new ArrayList<>();
+				if(!scoreBoardList.isEmpty()) {
+					for (ScoreBoard board: scoreBoardList) {
+						GetListOfquestionSetDto answers = new GetListOfquestionSetDto();
+						answers.setQuestion(board.getQuestion().getQuestionText());
+						if(board.getOption() == null) {
+							answers.setOption(null);
+						} else {
+							answers.setOption(board.getOption().getText());
+						}
+						List<Option> optionsList= optionRepo.findByQuestion(board.getQuestion());
+						boolean optionCheck = true;
+						for (Option option: optionsList) {
+							if(option.isCorrect() == optionCheck) {
+								answers.setCorrectOption(option.getText());
+							}
+						}
+						list.add(answers);
+			}
+		} else {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error: exam is not found by id:"+ score.getId()));
+		}
+		attemptDto.setListOfAnswer(list);
+		listOfAnswerAttemptDto.add(attemptDto);
+	}
+		return ResponseEntity.ok().body(listOfAnswerAttemptDto);
+	}
 	
 	@GetMapping("/getanswer/{id}")
 	@PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
@@ -348,4 +360,45 @@ public class AnswerController {
 		
 		
 	}
+	
+	
+	//dashboard of user;
+	@GetMapping("/dashboard/{id}")
+	@PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+	public ResponseEntity<?> dashboardOfUser(@PathVariable Long id){
+		Optional<User> optionalUser = userRepo.findById(id);
+		DashBoardDto dashboardDto = new DashBoardDto();
+		int totalExam = 0;
+		int totalQuestion = 0;
+		int rights = 0;
+		boolean check = true;
+		if(optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			List<UserScore> testList = userScoreRepo.findByUser(user);
+			if(!testList.isEmpty()) {
+				for(UserScore test: testList) {
+					totalExam += userScoreRepo.countById(test.getId());
+					totalQuestion += boardRepo.countByTest(test);
+					List<ScoreBoard> answersList = boardRepo.findByTest(test);
+					for(ScoreBoard answer: answersList) {
+						if(answer.getOption() != null) {
+							rights += optionRepo.countByIdAndIsCorrect(answer.getOption().getId(), check);
+						}
+					}
+				}
+				double average = ((double)rights/totalQuestion)*100.00;
+				dashboardDto.setTotal_exams(totalExam);
+				dashboardDto.setAverageMarks(average);
+				
+				
+			} else {
+				return ResponseEntity.badRequest().body(new MessageResponse("Error: test not found done by user " +user.getFirstName() +user.getLastName()));
+			}
+		} else {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error: User not found by id " +id));
+		}
+		return ResponseEntity.ok().body(dashboardDto);
+	}
+	
+	
 }

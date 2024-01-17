@@ -16,4 +16,6 @@ public interface ScoreBoardRepo extends JpaRepository<ScoreBoard, Long>{
 
 	Optional<ScoreBoard> findByTestAndQuestion(UserScore userScore, Question question);
 
+	int countByTest(UserScore test);
+
 }
