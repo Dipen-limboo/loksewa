@@ -50,6 +50,8 @@ public class QuestionSet {
 	@Size(max = 20, message = "The number of questions cannot exceed 20")
 	private List<Question> question = new ArrayList<>();
 
+	@Column(name="year")
+	private int year;
 	
 	public QuestionSet() {
 		super();
@@ -115,6 +117,16 @@ public class QuestionSet {
 
 	public void setOptions(SetOption options) {
 		this.options = options;
+	}
+
+
+	public int getYear() {
+		return year;
+	}
+
+
+	public void setYear(int year) {
+		this.year = year;
 	}
 	
 	

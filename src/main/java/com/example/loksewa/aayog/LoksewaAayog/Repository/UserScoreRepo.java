@@ -19,4 +19,6 @@ public interface UserScoreRepo extends JpaRepository<UserScore, Long>{
 
 	int countByQuestionSet(QuestionSet questionset);
 
+	int countByUser(User user);
+
 }

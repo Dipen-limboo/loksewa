@@ -93,55 +93,108 @@ public class QuestionSetController {
 	                });
 	            }
 
-	           
+	           int year = questionSetDto.getYear();
+	           if(year == 0) {
+	        	   if (strOptions != null && strOptions.contains("random")) {
+		                List<Question> listQuestion = questionRepo.findByPositionAndCategory(position, cate);
+		                List<Question> questionlistSet = new ArrayList<>();
+
+		                if (!listQuestion.isEmpty()) {
+		                    Random random = new Random();
+		                    Set<Integer> selectedIndices = new HashSet<>();
+
+		                    int maxQuestions = Math.min(2, listQuestion.size());
+
+		                    for (int i = 0; i < maxQuestions; i++) {
+		                        int randomIndex;
+
+		                        do {
+		                            randomIndex = random.nextInt(listQuestion.size());
+		                        } while (selectedIndices.contains(randomIndex));
+
+		                        selectedIndices.add(randomIndex);
+
+		                        Question randomQuestion = listQuestion.get(randomIndex);
+		                        questionlistSet.add(randomQuestion);
+		                    
+				                }
+		
+				                questionSet.setQuestion(questionlistSet);
+				                questionSet.setYear(0);
+				                questionsetRepo.save(questionSet);
+				            }
+
+		                } else {
+		                    List<QuestionIdDto> questionIdDto = questionSetDto.getQuestionId();
+		                    List<Question> questions = new ArrayList<>();
+		                    for (QuestionIdDto questiondto : questionIdDto) {
+		                        Long id = questiondto.getId();
+		                        Optional<Question> optionalQuestion = questionRepo.findById(id);
+		                        if (optionalQuestion.isPresent()) {
+		                            Question question = optionalQuestion.get();
+		                            question.setId(id);
+		                            questions.add(question);
+		                        }
+		                    }
+		                    questionSet.setQuestion(questions);
+		                    questionsetRepo.save(questionSet);
+
+		                }
+
+
+		            return ResponseEntity.status(HttpStatus.CREATED).body(questionSet);
+	           } else {
+	        	   if (strOptions != null && strOptions.contains("random")) {
+		                List<Question> listQuestion = questionRepo.findByPositionAndCategoryAndYear(position, cate, questionSetDto.getYear());
+		                List<Question> questionlistSet = new ArrayList<>();
+
+		                if (!listQuestion.isEmpty()) {
+		                    Random random = new Random();
+		                    Set<Integer> selectedIndices = new HashSet<>();
+
+		                    int maxQuestions = Math.min(2, listQuestion.size());
+
+		                    for (int i = 0; i < maxQuestions; i++) {
+		                        int randomIndex;
+
+		                        do {
+		                            randomIndex = random.nextInt(listQuestion.size());
+		                        } while (selectedIndices.contains(randomIndex));
+
+		                        selectedIndices.add(randomIndex);
+
+		                        Question randomQuestion = listQuestion.get(randomIndex);
+		                        questionlistSet.add(randomQuestion);
+		                    
+		                }
+
+		                questionSet.setQuestion(questionlistSet);
+		                questionSet.setYear(questionSetDto.getYear());
+		                questionsetRepo.save(questionSet);
+		            }
+
+		                } else {
+		                    List<QuestionIdDto> questionIdDto = questionSetDto.getQuestionId();
+		                    List<Question> questions = new ArrayList<>();
+		                    for (QuestionIdDto questiondto : questionIdDto) {
+		                        Long id = questiondto.getId();
+		                        Optional<Question> optionalQuestion = questionRepo.findById(id);
+		                        if (optionalQuestion.isPresent()) {
+		                            Question question = optionalQuestion.get();
+		                            question.setId(id);
+		                            questions.add(question);
+		                        }
+		                    }
+		                    questionSet.setQuestion(questions);
+		                    questionsetRepo.save(questionSet);
+
+		                }
+
+
+		            return ResponseEntity.status(HttpStatus.CREATED).body(questionSet);
+	           }
 	            	
-	            if (strOptions != null && strOptions.contains("random")) {
-	                List<Question> listQuestion = questionRepo.findByPositionAndCategory(position, cate);
-	                List<Question> questionlistSet = new ArrayList<>();
-
-	                if (!listQuestion.isEmpty()) {
-	                    Random random = new Random();
-	                    Set<Integer> selectedIndices = new HashSet<>();
-
-	                    int maxQuestions = Math.min(2, listQuestion.size());
-
-	                    for (int i = 0; i < maxQuestions; i++) {
-	                        int randomIndex;
-
-	                        do {
-	                            randomIndex = random.nextInt(listQuestion.size());
-	                        } while (selectedIndices.contains(randomIndex));
-
-	                        selectedIndices.add(randomIndex);
-
-	                        Question randomQuestion = listQuestion.get(randomIndex);
-	                        questionlistSet.add(randomQuestion);
-	                    
-	                }
-
-	                questionSet.setQuestion(questionlistSet);
-	                questionsetRepo.save(questionSet);
-	            }
-
-	                } else {
-	                    List<QuestionIdDto> questionIdDto = questionSetDto.getQuestionId();
-	                    List<Question> questions = new ArrayList<>();
-	                    for (QuestionIdDto questiondto : questionIdDto) {
-	                        Long id = questiondto.getId();
-	                        Optional<Question> optionalQuestion = questionRepo.findById(id);
-	                        if (optionalQuestion.isPresent()) {
-	                            Question question = optionalQuestion.get();
-	                            question.setId(id);
-	                            questions.add(question);
-	                        }
-	                    }
-	                    questionSet.setQuestion(questions);
-	                    questionsetRepo.save(questionSet);
-
-	                }
-
-
-	            return ResponseEntity.status(HttpStatus.CREATED).body(questionSet);
+	            
 
 	        } else {
 	            return ResponseEntity.badRequest().body(new MessageResponse("ERROR: Position with Id " + positionIds + " not Found."));

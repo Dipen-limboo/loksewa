@@ -15,4 +15,8 @@ public interface QuestionsetRepo extends JpaRepository<QuestionSet, Long>{
 
 	List<QuestionSet> findByCategory(Category cate);
 
+	List<QuestionSet> findByPosition(Position position);
+
+	List<QuestionSet> findByYear(int year);
+
 }

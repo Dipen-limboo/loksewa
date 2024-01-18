@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 @JsonIgnoreProperties({"questionText", "optionT", "options"})
 public class QuestionSetDto {
@@ -16,6 +17,9 @@ public class QuestionSetDto {
 	
 	@NotNull
 	private int position;
+	
+	
+	private int year;
 
 	private Set<String> setOption;
 	
@@ -73,6 +77,14 @@ public class QuestionSetDto {
 
 	public void setCategory(Long category) {
 		this.category = category;
+	}
+
+	public int getYear() {
+		return year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
 	}
 	
 }

@@ -4,6 +4,8 @@ public class CategoryListDto {
 	private String category;
 	
 	private int total_exams;
+	
+	private double average;
 
 	public CategoryListDto(String category, int total_exams) {
 		super();
@@ -30,6 +32,14 @@ public class CategoryListDto {
 
 	public void setTotal_exams(int total_exams) {
 		this.total_exams = total_exams;
+	}
+
+	public double getAverage() {
+		return average;
+	}
+
+	public void setAverage(double average) {
+		this.average = average;
 	}
 	
 	

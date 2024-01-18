@@ -8,6 +8,8 @@ public class AdminDashboardDto {
 	private List<PositionListDto> positionList;
 	
 	private List<UserListDto> userList;
+	
+	private List<YearDto> YearList;
 
 	public AdminDashboardDto() {
 		super();
@@ -44,6 +46,14 @@ public class AdminDashboardDto {
 
 	public void setUserList(List<UserListDto> userList) {
 		this.userList = userList;
+	}
+
+	public List<YearDto> getYearList() {
+		return YearList;
+	}
+
+	public void setYearList(List<YearDto> yearList) {
+		YearList = yearList;
 	}
 	
 	

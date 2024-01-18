@@ -17,4 +17,6 @@ public interface QuestionRepo extends JpaRepository<Question, Long>{
 	List<Question> findByPositionAndCategory(Position position, Category cate);
 
 	List<Question> findByYearAndCategoryAndPosition(int year, Category cate, Position position);
+
+	List<Question> findByPositionAndCategoryAndYear(Position position, Category cate, int year);
 }

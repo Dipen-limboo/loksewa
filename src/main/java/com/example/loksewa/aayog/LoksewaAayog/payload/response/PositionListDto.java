@@ -4,7 +4,8 @@ public class PositionListDto {
 	private String position;
 	
 	private int total_exams;
-
+	
+	private double average_exams;
 	public PositionListDto() {
 		super();
 		// TODO Auto-generated constructor stub
@@ -30,6 +31,14 @@ public class PositionListDto {
 
 	public void setTotal_exams(int total_exams) {
 		this.total_exams = total_exams;
+	}
+
+	public double getAverage_exams() {
+		return average_exams;
+	}
+
+	public void setAverage_exams(double average_exams) {
+		this.average_exams = average_exams;
 	}
 	
 	
