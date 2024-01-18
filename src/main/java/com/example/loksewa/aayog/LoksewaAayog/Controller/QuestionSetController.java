@@ -79,7 +79,6 @@ public class QuestionSetController {
 	            questionSet.setPosition(position);
 
 	            Set<String> strOptions = questionSetDto.getSetOption();
-	            System.out.println(">>>>>>>>>>>>>>>>"+strOptions);
 	            if (strOptions == null) {
 	                questionSet.setOptions(SetOption.SELECT);
 	            } else {

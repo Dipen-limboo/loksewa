@@ -1,6 +1,7 @@
 package com.example.loksewa.aayog.LoksewaAayog.Controller;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -314,6 +315,9 @@ public class UserController {
 	    if (optionalUser.isPresent()) {
 	        User user = optionalUser.get();
 	        Set<String> roleSet = changeRoleDto.getRole();
+	        if (roleSet == null) {
+	            roleSet = new HashSet<>(Collections.singletonList("user"));
+	        }
 	        Set<Role> roles = roleSet.stream()
 	                .map(roleName -> {
 	                    switch (roleName) {
@@ -331,6 +335,21 @@ public class UserController {
 	                .collect(Collectors.toSet());
 
 	        user.setRoles(roles);
+	        
+	        Set<String> setStatus = changeRoleDto.getStatus();
+	        if(setStatus == null) {
+	        	user.setStatus(Status.ACTIVE);
+	        } else {
+	        	setStatus.forEach(status -> {
+	        		switch(status) {
+	        		case "deactivated":
+	        			user.setStatus(Status.DEACTIVE);
+	        			break;
+	        		default: 
+	        			user.setStatus(Status.ACTIVE);
+	        		}
+	        	});
+	        }
 	        userRepository.save(user);
 
 	        return ResponseEntity.ok().body(changeRoleDto);

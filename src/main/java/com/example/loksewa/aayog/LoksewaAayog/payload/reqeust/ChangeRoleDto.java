@@ -5,17 +5,19 @@ import java.util.Set;
 import jakarta.validation.constraints.NotEmpty;
 
 public class ChangeRoleDto {
-	@NotEmpty
+	
 	private Set<String> role;
 
+	private Set<String> status;
 	public ChangeRoleDto() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public ChangeRoleDto(@NotEmpty Set<String> role) {
+	public ChangeRoleDto(Set<String> role, Set<String> status) {
 		super();
 		this.role = role;
+		this.status = status;
 	}
 
 	public Set<String> getRole() {
@@ -25,7 +27,13 @@ public class ChangeRoleDto {
 	public void setRole(Set<String> role) {
 		this.role = role;
 	}
-	
-	
+
+	public Set<String> getStatus() {
+		return status;
+	}
+
+	public void setStatus(Set<String> status) {
+		this.status = status;
+	}
 	
 }
