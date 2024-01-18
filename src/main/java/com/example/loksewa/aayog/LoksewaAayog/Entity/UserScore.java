@@ -32,18 +32,23 @@ public class UserScore {
 	@Column(name="expiry-date")
 	@JsonFormat(pattern="yyyy-MM-dd")
 	private Date expiry;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="question_sets")
+	private QuestionSet questionSet;
 
 	public UserScore() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public UserScore(Long id, User user, Date date, Date expiry) {
+	public UserScore(Long id, User user, Date date, Date expiry, QuestionSet questionSet) {
 		super();
 		this.id = id;
 		this.user = user;
 		this.date = date;
 		this.expiry = expiry;
+		this.questionSet = questionSet;
 	}
 
 	public Long getId() {
@@ -76,6 +81,14 @@ public class UserScore {
 
 	public void setExpiry(Date expiry) {
 		this.expiry = expiry;
+	}
+
+	public QuestionSet getQuestionSet() {
+		return questionSet;
+	}
+
+	public void setQuestionSet(QuestionSet questionSet) {
+		this.questionSet = questionSet;
 	}
 	
 	

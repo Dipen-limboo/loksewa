@@ -37,6 +37,7 @@ import com.example.loksewa.aayog.LoksewaAayog.Repository.UserScoreRepo;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.AnswerDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.AnswerSetDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.reqeust.DashBoardDto;
+import com.example.loksewa.aayog.LoksewaAayog.payload.response.AdminDashboardDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.DisplayOptionDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.DisplayQuestionSetDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.GetListOfquestionSetDto;
@@ -149,6 +150,7 @@ public class AnswerController {
 				User user = userOptional.get();
 				UserScore userScore = new UserScore();
 				userScore.setUser(user);
+				userScore.setQuestionSet(questionSet);
 				Date newDate = new Date();
 				userScore.setDate(newDate);
 				Date expiryDate = new Date(newDate.getTime()+EXPIRATION_TIME_MS);
@@ -354,44 +356,6 @@ public class AnswerController {
 		
 	}
 	
-	
-	//dashboard of user;
-	@GetMapping("/dashboard/{id}")
-	@PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
-	public ResponseEntity<?> dashboardOfUser(@PathVariable Long id){
-		Optional<User> optionalUser = userRepo.findById(id);
-		DashBoardDto dashboardDto = new DashBoardDto();
-		int totalExam = 0;
-		int totalQuestion = 0;
-		int rights = 0;
-		boolean check = true;
-		if(optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			List<UserScore> testList = userScoreRepo.findByUser(user);
-			if(!testList.isEmpty()) {
-				for(UserScore test: testList) {
-					totalExam += userScoreRepo.countById(test.getId());
-					totalQuestion += boardRepo.countByTest(test);
-					List<ScoreBoard> answersList = boardRepo.findByTest(test);
-					for(ScoreBoard answer: answersList) {
-						if(answer.getOption() != null) {
-							rights += optionRepo.countByIdAndIsCorrect(answer.getOption().getId(), check);
-						}
-					}
-				}
-				double average = ((double)rights/totalQuestion)*100.00;
-				dashboardDto.setTotal_exams(totalExam);
-				dashboardDto.setAverageMarks(average);
-				
-				
-			} else {
-				return ResponseEntity.badRequest().body(new MessageResponse("Error: test not found done by user " +user.getFirstName() +user.getLastName()));
-			}
-		} else {
-			return ResponseEntity.badRequest().body(new MessageResponse("Error: User not found by id " +id));
-		}
-		return ResponseEntity.ok().body(dashboardDto);
-	}
 	
 	
 }
