@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.loksewa.aayog.LoksewaAayog.Entity.ERole;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Role;
+import com.example.loksewa.aayog.LoksewaAayog.Entity.Status;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.User;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.RoleRepository;
 import com.example.loksewa.aayog.LoksewaAayog.Repository.UserRepository;
@@ -88,7 +89,9 @@ public class UserController {
 		if(!userDetails.isVerified()) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageResponse("ERROR: Verified your email to singup first"));
 		}
-		
+		if (userDetails.getStatus().equals(Status.DEACTIVE)) {
+		    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageResponse("Error: You are deactivated by admin"));
+		}
 		String jwt = jwtUtils.generateJwtToken(authentication);
 		List<String> roles = userDetails.getAuthorities().stream()
 				.map(item -> item.getAuthority())

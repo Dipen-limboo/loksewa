@@ -10,6 +10,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.example.loksewa.aayog.LoksewaAayog.Entity.Status;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -26,7 +27,7 @@ public class UserDetailsImpl implements UserDetails {
 	  private String password;
 	  
 	  private boolean isVerified;
-	  
+	  private Status status;
 	  private String firstname;
 	  private String middlename;
 	  private String lastname;
@@ -34,9 +35,9 @@ public class UserDetailsImpl implements UserDetails {
 	  private String phone;
 
 	  private Collection<? extends GrantedAuthority> authorities;
-
 	  
-	  public UserDetailsImpl(Long id, String username, String email, String password, boolean isVerified,
+
+	  public UserDetailsImpl(Long id, String username, String email, String password, boolean isVerified, Status status,
 			String firstname, String middlename, String lastname, Date dateOfbirth, String phone,
 			Collection<? extends GrantedAuthority> authorities) {
 		super();
@@ -45,15 +46,16 @@ public class UserDetailsImpl implements UserDetails {
 		this.email = email;
 		this.password = password;
 		this.isVerified = isVerified;
+		this.status = status;
 		this.firstname = firstname;
 		this.middlename = middlename;
 		this.lastname = lastname;
 		this.dateOfbirth = dateOfbirth;
 		this.phone = phone;
 		this.authorities = authorities;
-	}
+	  }
 
-	public static UserDetailsImpl build(User user) {
+	  public static UserDetailsImpl build(User user) {
 	    List<GrantedAuthority> authorities = user.getRoles().stream()
 	        .map(role -> new SimpleGrantedAuthority(role.getName().name()))
 	        .collect(Collectors.toList());
@@ -64,6 +66,7 @@ public class UserDetailsImpl implements UserDetails {
 	        user.getEmail(),
 	        user.getPassword(), 
 	        user.isVerified(),
+	        user.getStatus(),
 	        user.getFirstName(),
 	        user.getMiddleName(),
 	        user.getLastName(),
@@ -87,28 +90,32 @@ public class UserDetailsImpl implements UserDetails {
 	  
 	  
 	  public String getFirstname() {
-		return firstname;
-	}
-
-	public String getMiddlename() {
-		return middlename;
-	}
-
-	public String getLastname() {
-		return lastname;
-	}
-
-	public Date getDateOfbirth() {
-		return dateOfbirth;
-	}
-
-	public String getPhone() {
-		return phone;
-	}
-
-	public boolean isVerified() {
-		return true;
+		  return firstname;
 	  }
+	  
+	  public Status getStatus() {
+		  return status;
+	  }
+	
+		public String getMiddlename() {
+			return middlename;
+		}
+	
+		public String getLastname() {
+			return lastname;
+		}
+	
+		public Date getDateOfbirth() {
+			return dateOfbirth;
+		}
+	
+		public String getPhone() {
+			return phone;
+		}
+	
+		public boolean isVerified() {
+			return true;
+		}
 
 	  @Override
 	  public String getPassword() {

@@ -154,13 +154,8 @@ public class AnswerController {
 				Date expiryDate = new Date(newDate.getTime()+EXPIRATION_TIME_MS);
 				userScore.setExpiry(expiryDate);
 				userScoreRepo.save(userScore);
-				
-				
-				
 				List<Question> listQuestion = questionSet.getQuestion();
-				
 				String message = "Your answers";
-
 				for(Question question: listQuestion) {
 					ScoreBoard scoreboard = new ScoreBoard();
 					scoreboard.setBoard(userScore);
@@ -188,8 +183,6 @@ public class AnswerController {
 						boardRepo.save(scoreboard);
 						}
 				}
-		
-				
 				ScoreResponseDto score = new ScoreResponseDto();
 				List<QuestionResponseDto> responseDtoList = new ArrayList<>();
 				for(Question question: listQuestion) {
