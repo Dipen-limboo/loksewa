@@ -4,12 +4,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Category;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Position;
 import com.example.loksewa.aayog.LoksewaAayog.Entity.Question;
 
-public interface QuestionRepo extends JpaRepository<Question, Long>{
+public interface QuestionRepo extends JpaRepository<Question, Long>, JpaSpecificationExecutor<Question>{
 	List<Question> findByIdIn(List<Long> ids);
 	
 	Optional<Question> findById(Long id);
