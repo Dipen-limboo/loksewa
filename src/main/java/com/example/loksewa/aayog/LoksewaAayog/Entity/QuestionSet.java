@@ -55,6 +55,9 @@ public class QuestionSet {
 	private int year;
 	
 	
+	@OneToMany(fetch = FetchType.LAZY)
+	private List<UserScore> userScore;
+	
 	
 	public QuestionSet() {
 		super();

@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.core.Authentication;
@@ -40,6 +41,7 @@ import com.example.loksewa.aayog.LoksewaAayog.payload.response.QuestionResponseD
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.QuestionSetDisplayDto;
 import com.example.loksewa.aayog.LoksewaAayog.payload.response.ScoreResponseDto;
 import com.example.loksewa.aayog.LoksewaAayog.security.service.UserDetailsImpl;
+import com.example.loksewa.aayog.LoksewaAayog.specification.ExamSpecification;
 
 @Service
 public class AnswerService {
@@ -206,41 +208,51 @@ public class AnswerService {
 		}
 	}
 	
-	public ResponseEntity<?> answersList(){
-		List<UserScore> userscorelist = userScoreRepo.findAll();
-		List<ListOfAnswerAttemptDto> listOfAnswerAttemptDto = new ArrayList<>();
-		for (UserScore score: userscorelist) {
-			ListOfAnswerAttemptDto attemptDto = new ListOfAnswerAttemptDto();
-			attemptDto.setId(score.getId());
-			attemptDto.setDate(score.getDate());
-		
-			List<ScoreBoard> scoreBoardList = boardRepo.findByTest(score);
-			List<GetListOfquestionSetDto> list = new ArrayList<>();
-				if(!scoreBoardList.isEmpty()) {
-					for (ScoreBoard board: scoreBoardList) {
-						GetListOfquestionSetDto answers = new GetListOfquestionSetDto();
-						answers.setQuestion(board.getQuestion().getQuestionText());
-						if(board.getOption() == null) {
-							answers.setOption(null);
-						} else {
-							answers.setOption(board.getOption().getText());
-						}
-						List<Option> optionsList= optionRepo.findByQuestion(board.getQuestion());
-						boolean optionCheck = true;
-						for (Option option: optionsList) {
-							if(option.isCorrect() == optionCheck) {
-								answers.setCorrectOption(option.getText());
-							}
-						}
-						list.add(answers);
-			}
-		} else {
-			return ResponseEntity.badRequest().body(new MessageResponse("Error: exam is not found by id:"+ score.getId()));
-		}
-		attemptDto.setListOfAnswer(list);
-		listOfAnswerAttemptDto.add(attemptDto);
-	}
-		return ResponseEntity.ok().body(listOfAnswerAttemptDto);
+	public ResponseEntity<?> answersList(Long categoryId, Long positionId, Integer year, Long userId){
+		  Specification<UserScore> filters = Specification.where(categoryId !=null ?ExamSpecification.getByCategories(categoryId):null)
+		            .and(positionId != null ? ExamSpecification.getByPosition(positionId) : null)
+		            .and(userId != null ? ExamSpecification.getByUser(userId): null)
+		            .and(year != null ? ExamSpecification.getByYears(year): null);
+
+		    List<UserScore> userscorelist = userScoreRepo.findAll(filters);
+
+		    if (userscorelist.isEmpty()) {
+		        return ResponseEntity.badRequest().body(new MessageResponse("Error: user List is empty"));
+		    } else {
+		        List<ListOfAnswerAttemptDto> listOfAnswerAttemptDto = new ArrayList<>();
+		        for (UserScore score : userscorelist) {
+		            ListOfAnswerAttemptDto attemptDto = new ListOfAnswerAttemptDto();
+		            attemptDto.setId(score.getId());
+		            attemptDto.setDate(score.getDate());
+
+		            List<ScoreBoard> scoreBoardList = boardRepo.findByTest(score);
+		            List<GetListOfquestionSetDto> list = new ArrayList<>();
+		            if (!scoreBoardList.isEmpty()) {
+		                for (ScoreBoard board : scoreBoardList) {
+		                    GetListOfquestionSetDto answers = new GetListOfquestionSetDto();
+		                    answers.setQuestion(board.getQuestion().getQuestionText());
+		                    if (board.getOption() == null) {
+		                        answers.setOption(null);
+		                    } else {
+		                        answers.setOption(board.getOption().getText());
+		                    }
+		                    List<Option> optionsList = optionRepo.findByQuestion(board.getQuestion());
+		                    boolean optionCheck = true;
+		                    for (Option option : optionsList) {
+		                        if (option.isCorrect() == optionCheck) {
+		                            answers.setCorrectOption(option.getText());
+		                        }
+		                    }
+		                    list.add(answers);
+		                }
+		            } else {
+		                return ResponseEntity.badRequest().body(new MessageResponse("Error: exam is not found by id:" + score.getId()));
+		            }
+		            attemptDto.setListOfAnswer(list);
+		            listOfAnswerAttemptDto.add(attemptDto);
+		        }
+		        return ResponseEntity.ok().body(listOfAnswerAttemptDto);
+		    }
 	}
 	
 	public ResponseEntity<?> answerListOfUser(Long id){
